@@ -1,1 +1,1 @@
-参考了 [栖光集](https://xrw-album.christin3.com/) 的设计
+页面仿照 [栖光集](https://xrw-album.christin3.com/) 设计
