@@ -7,6 +7,7 @@ import { ArrowUpRight, Bookmark, ImageOff, X } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import type { Album } from "@/lib/types";
 import { thumbnailUrl } from "@/lib/utils";
+import { Tooltip } from "./ui/tooltip";
 import { useLibrary } from "./providers";
 
 export const AlbumCard = forwardRef<HTMLElement, {
@@ -31,16 +32,16 @@ export const AlbumCard = forwardRef<HTMLElement, {
     {/* CSS entrance works without JavaScript; the wrapper leaves Motion free to animate layout. */}
     <div className="album-card-body" style={{ "--card-index": Math.min(index, 7) } as CSSProperties}
       onAnimationEnd={(event) => { if (event.animationName === "album-enter") onEnterComplete?.(); }}>
-      <Link href={`/album/${album.id}`} className="album-cover" data-image-state={imageState} aria-label={`${album.modelName} · ${album.title}，${album.photoCount} 张图片`}>
+      <Link href={`/album/${album.id}`} className="album-cover" data-image-state={imageState} aria-label={`${album.modelName} · ${album.title}，${album.photoCount} 张图片${saved ? "，已收藏" : ""}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img {...cover} ref={image} onLoad={() => setImageState("loaded")} onError={() => setImageState("error")} />
         {imageState === "error" && <span className="cover-error"><ImageOff size={22} strokeWidth={1} /><span>封面暂时无法加载</span></span>}
         {overlay && <span className="cover-caption"><span className="cover-title">{album.modelName} · {album.title}</span><span className="cover-meta">{album.photoCount} 张</span></span>}
         {!remove && <span className="hover-arrow" aria-hidden="true"><ArrowUpRight size={15} /></span>}
-        {saved && <span className="saved-badge" title="已收藏"><Bookmark size={13} fill="currentColor" /></span>}
+        {saved && <Tooltip label="已收藏"><span className="saved-badge"><Bookmark size={13} fill="currentColor" /></span></Tooltip>}
       </Link>
       {!overlay && <div className="album-card-info"><Link className="album-card-title" href={`/album/${album.id}`}>{album.title}</Link><div className="album-card-meta"><Link href={`/model/${album.modelId}`}>{album.modelName}</Link><span>{album.photoCount} 张</span></div></div>}
-      {remove && <button type="button" className="card-remove" onClick={remove} aria-label={`取消收藏 ${album.title}`} title="取消收藏"><X size={14} /></button>}
+      {remove && <Tooltip label="取消收藏"><button type="button" className="card-remove" onClick={remove} aria-label={`取消收藏 ${album.title}`}><X size={14} /></button></Tooltip>}
     </div>
   </motion.article>;
 });

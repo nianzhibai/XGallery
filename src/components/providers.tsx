@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
+import { TooltipProvider } from "./ui/tooltip";
 import type { LibraryState } from "@/lib/types";
 
 const initialLibrary: LibraryState = { favorites: [], recent: [], liked: [] };
@@ -49,12 +50,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const clearRecent = useCallback(() => setLibrary((state) => ({ ...state, recent: [] })), []);
 
   return <MotionConfig reducedMotion="user">
+    <TooltipProvider delayDuration={450}>
     <LibraryContext.Provider value={{ library, ready, toast, toggleFavorite, visit, setLiked, clearRecent }}>
       {children}
       <div className="toast-region" role="status" aria-live="polite">
         <AnimatePresence>{message && <motion.div className="toast" key={message} initial={{ opacity: 0, y: 10, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 6 }} transition={{ duration: 0.24, ease: [0.2, 0.7, 0.2, 1] }}>{message}</motion.div>}</AnimatePresence>
       </div>
     </LibraryContext.Provider>
+    </TooltipProvider>
   </MotionConfig>;
 }
 
