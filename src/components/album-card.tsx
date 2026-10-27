@@ -1,32 +1,57 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUpRight, Bookmark, X } from "lucide-react";
-import { motion } from "motion/react";
+import { getImageProps } from "next/image";
+import { forwardRef, useEffect, useRef, useState, type CSSProperties } from "react";
+import { ArrowUpRight, Bookmark, ImageOff, X } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import type { Album } from "@/lib/types";
-import { imageUrl } from "@/lib/utils";
+import { thumbnailUrl } from "@/lib/utils";
 import { useLibrary } from "./providers";
 
-export function AlbumCard({ album, index = 0, overlay = false, remove }: {
-  album: Album; index?: number; overlay?: boolean; remove?: () => void;
-}) {
+export const AlbumCard = forwardRef<HTMLElement, {
+  album: Album; index?: number; overlay?: boolean; remove?: () => void; onEnterComplete?: () => void;
+}>(function AlbumCard({ album, index = 0, overlay = false, remove, onEnterComplete }, ref) {
   const { library } = useLibrary();
   const saved = library.favorites.includes(album.id);
-  return <motion.article className={`album-card${overlay ? " album-card-overlay" : ""}`}
-    initial={false} whileHover={{ y: -2 }}
-    transition={{ duration: 0.25 }}>
-    <Link href={`/album/${album.id}`} className="album-cover" aria-label={`${album.modelName} · ${album.title}，${album.photoCount} 张图片`}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={imageUrl(album.coverId)} alt={`${album.modelName} · ${album.title}`} loading={index < 4 ? "eager" : "lazy"} decoding="async" width={600} height={800} />
-      {overlay && <span className="cover-caption"><span className="cover-title">{album.modelName} · {album.title}</span><span className="cover-meta">{album.photoCount} 张</span></span>}
-      <ArrowUpRight className="hover-arrow" size={22} aria-hidden="true" />
-      {saved && <span className="saved-badge" title="已收藏"><Bookmark size={13} fill="currentColor" /></span>}
-    </Link>
-    {!overlay && <div className="album-card-info"><Link className="album-card-title" href={`/album/${album.id}`}>{album.title}</Link><div className="album-card-meta"><Link href={`/model/${album.modelId}`}>{album.modelName}</Link><span>{album.photoCount} 张</span></div></div>}
-    {remove && <button type="button" className="card-remove" onClick={remove} aria-label={`取消收藏 ${album.title}`} title="取消收藏"><X size={14} /></button>}
-  </motion.article>;
-}
+  const image = useRef<HTMLImageElement>(null);
+  const [imageState, setImageState] = useState<"loading" | "loaded" | "error">("loading");
+  const { props: cover } = getImageProps({ src: thumbnailUrl(album.coverId, album.coverVersion), alt: `${album.modelName} · ${album.title}`, width: 600, height: 800,
+    sizes: "(max-width: 440px) 100vw, (max-width: 680px) 50vw, (max-width: 1100px) 33vw, 25vw", loading: index < 4 ? "eager" : "lazy" });
 
-export function AlbumGrid({ albums, overlay = false, onRemove }: { albums: Album[]; overlay?: boolean; onRemove?: (id: string) => void }) {
-  return <div className="albums-grid">{albums.map((album, index) => <AlbumCard key={album.id} album={album} index={index} overlay={overlay} remove={onRemove ? () => onRemove(album.id) : undefined} />)}</div>;
+  useEffect(() => {
+    const element = image.current;
+    if (!element?.complete) setImageState("loading");
+    else setImageState(element.naturalWidth > 0 ? "loaded" : "error");
+  }, [cover.src]);
+
+  return <motion.article ref={ref} className={`album-card${overlay ? " album-card-overlay" : ""}`}
+    layout="position" initial={false} exit={{ opacity: 0, scale: 0.985 }}
+    transition={{ duration: 0.28, ease: [0.2, 0.7, 0.2, 1] }}>
+    {/* CSS entrance works without JavaScript; the wrapper leaves Motion free to animate layout. */}
+    <div className="album-card-body" style={{ "--card-index": Math.min(index, 7) } as CSSProperties}
+      onAnimationEnd={(event) => { if (event.animationName === "album-enter") onEnterComplete?.(); }}>
+      <Link href={`/album/${album.id}`} className="album-cover" data-image-state={imageState} aria-label={`${album.modelName} · ${album.title}，${album.photoCount} 张图片`}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img {...cover} ref={image} onLoad={() => setImageState("loaded")} onError={() => setImageState("error")} />
+        {imageState === "error" && <span className="cover-error"><ImageOff size={22} strokeWidth={1} /><span>封面暂时无法加载</span></span>}
+        {overlay && <span className="cover-caption"><span className="cover-title">{album.modelName} · {album.title}</span><span className="cover-meta">{album.photoCount} 张</span></span>}
+        {!remove && <span className="hover-arrow" aria-hidden="true"><ArrowUpRight size={15} /></span>}
+        {saved && <span className="saved-badge" title="已收藏"><Bookmark size={13} fill="currentColor" /></span>}
+      </Link>
+      {!overlay && <div className="album-card-info"><Link className="album-card-title" href={`/album/${album.id}`}>{album.title}</Link><div className="album-card-meta"><Link href={`/model/${album.modelId}`}>{album.modelName}</Link><span>{album.photoCount} 张</span></div></div>}
+      {remove && <button type="button" className="card-remove" onClick={remove} aria-label={`取消收藏 ${album.title}`} title="取消收藏"><X size={14} /></button>}
+    </div>
+  </motion.article>;
+});
+
+export function AlbumGrid({ albums, overlay = false, onRemove, batchKey = 0, onEnterComplete }: {
+  albums: Album[]; overlay?: boolean; onRemove?: (id: string) => void; batchKey?: number; onEnterComplete?: () => void;
+}) {
+  const reducedMotion = useReducedMotion();
+  return <AnimatePresence mode="wait"><motion.div key={batchKey} className="albums-grid" initial={false}
+    exit={{ opacity: 0, y: reducedMotion ? 0 : -5 }} transition={{ duration: reducedMotion ? 0 : 0.18, ease: [0.4, 0, 1, 1] }}>
+    <AnimatePresence initial={false} mode="popLayout">{albums.map((album, index) => <AlbumCard key={album.id} album={album} index={index} overlay={overlay}
+      remove={onRemove ? () => onRemove(album.id) : undefined} onEnterComplete={index === albums.length - 1 ? onEnterComplete : undefined} />)}</AnimatePresence>
+  </motion.div></AnimatePresence>;
 }

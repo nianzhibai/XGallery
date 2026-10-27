@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 import { ChevronDown, Search } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import { AnimatePresence, motion } from "motion/react";
 import type { Model } from "@/lib/types";
 import { Button } from "./ui/button";
 import { PageHeading } from "./page-parts";
@@ -20,7 +21,9 @@ export function ModelsList({ models }: { models: Model[] }) {
         </DropdownMenu.Content></DropdownMenu.Portal></DropdownMenu.Root>
       </div>
     </PageHeading>
-    <div className="models-grid">{visible.map((model, index) => <Link href={`/model/${model.id}`} key={model.id} className="model-row"><span className="model-initial" aria-hidden="true">{Array.from(model.name)[0]}</span><span className="model-info"><span className="model-name">{model.name}</span><span className="model-meta">{model.albumCount} 个图集 <span>· {model.photoCount.toLocaleString("zh-CN")} 张</span></span></span><span className="model-rank">{index + 1}</span></Link>)}</div>
+    <div className="models-grid"><AnimatePresence initial={false} mode="popLayout">{visible.map((model, index) => <motion.div key={model.id} layout="position" initial={false} exit={{ opacity: 0 }} transition={{ duration: 0.28, ease: [0.2, 0.7, 0.2, 1] }}>
+      <div className="model-reveal" style={{ "--model-index": Math.min(index, 20) } as CSSProperties}><Link href={`/model/${model.id}`} className="model-row"><span className="model-initial" aria-hidden="true">{Array.from(model.name)[0]}</span><span className="model-info"><span className="model-name">{model.name}</span><span className="model-meta">{model.albumCount} 个图集 <span>· {model.photoCount.toLocaleString("zh-CN")} 张</span></span></span><span className="model-rank">{index + 1}</span></Link></div>
+    </motion.div>)}</AnimatePresence></div>
     {visible.length === 0 && <p className="no-results">没有找到“{query}”相关模特</p>}
   </>;
 }

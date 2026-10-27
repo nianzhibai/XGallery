@@ -1,6 +1,6 @@
 # Project Overview
 
-- **XGallery** is built with **Next.js + TypeScript**, combining **Tailwind CSS, shadcn/ui, and Motion** to create a polished, fluid, and interactive interface. It uses **SQLite + Drizzle** for efficient data management and **PhotoSwipe** for an immersive image-viewing experience.
+- **XGallery** is built with **Next.js + TypeScript**, combining **Tailwind CSS, shadcn/ui, and Motion** to create beautiful, silky-smooth animations. It uses **SQLite + Drizzle** for efficient data management and **PhotoSwipe** for an immersive image-viewing experience.
 - **XGallery** is a minimalist and elegant gallery showcasing photo collections featuring multiple models, designed to deliver a refined, seamless, and immersive browsing experience.
 
 # Documentation Rules

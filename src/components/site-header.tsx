@@ -1,26 +1,35 @@
 "use client";
 
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { Bookmark, Dice5, Heart, Search, UsersRound, X } from "lucide-react";
 import type { Model } from "@/lib/types";
 import { ThemeToggle } from "./theme-toggle";
 import { cn } from "@/lib/utils";
+import { useScrollHeader } from "@/lib/use-scroll-header";
+
+function NavigationHint() {
+  const { pending } = useLinkStatus();
+  return <span className="nav-pending" data-pending={pending || undefined} aria-hidden="true" />;
+}
 
 export function SiteHeader({ models, query = "" }: { models: Model[]; query?: string }) {
   const pathname = usePathname();
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
+  const header = useScrollHeader<HTMLDivElement>();
+  const [pending, startTransition] = useTransition();
   const [value, setValue] = useState(query);
   const [focused, setFocused] = useState(false);
   const [selected, setSelected] = useState(-1);
   const results = value.trim() ? models.filter((model) => model.name.toLocaleLowerCase().includes(value.trim().toLocaleLowerCase())).slice(0, 5) : [];
   const showSuggestions = focused && results.length > 0;
-  useEffect(() => { setValue(query); }, [query]);
+  useEffect(() => { setValue(query); setSelected(-1); }, [query]);
   useEffect(() => {
     const handle = (event: KeyboardEvent) => {
-      if (event.key === "/" && !event.metaKey && !event.ctrlKey && !(event.target instanceof HTMLElement && (event.target.isContentEditable || /INPUT|TEXTAREA|SELECT/.test(event.target.tagName)))) {
+      if (event.key === "/" && !event.metaKey && !event.ctrlKey && !event.altKey && !(event.target instanceof HTMLElement && (event.target.isContentEditable || /INPUT|TEXTAREA|SELECT/.test(event.target.tagName)))) {
         event.preventDefault(); input.current?.focus();
       }
     };
@@ -29,21 +38,27 @@ export function SiteHeader({ models, query = "" }: { models: Model[]; query?: st
   }, []);
 
   function pick(id: string) {
-    setFocused(false); input.current?.blur(); router.push(`/model/${id}`);
+    navigate(`/model/${id}`);
   }
 
-  return <div className="site-bar"><header className="site-header">
+  function navigate(url: string) {
+    setFocused(false);
+    input.current?.blur();
+    startTransition(() => router.push(url));
+  }
+
+  return <div ref={header} className="site-bar scroll-header"><header className="site-header">
     <Link href="/" className="brand" aria-label="XGallery 首页"><span className="brand-mark" /><span className="brand-title">XGallery</span></Link>
     <div className="header-actions">
       <nav className="header-nav" aria-label="浏览">
-        <Link className={cn("nav-pill", pathname === "/models" && "is-active")} href="/models" title="模特"><UsersRound /><span>模特</span></Link>
-        <Link className={cn("nav-pill", pathname === "/popular" && "is-active")} href="/popular" title="最受喜爱"><Heart /><span>最受喜爱</span></Link>
+        <Link className={cn("nav-pill", (pathname === "/models" || pathname.startsWith("/model/")) && "is-active")} href="/models" aria-label="模特" aria-current={pathname === "/models" ? "page" : undefined} title="模特"><UsersRound /><span className="nav-label">模特</span><NavigationHint /></Link>
+        <Link className={cn("nav-pill", pathname === "/popular" && "is-active")} href="/popular" aria-label="最受喜爱" aria-current={pathname === "/popular" ? "page" : undefined} title="最受喜爱"><Heart /><span className="nav-label">最受喜爱</span><NavigationHint /></Link>
       </nav>
-      <form className="search-box" role="search" action="/search" onSubmit={(event) => {
+      <form className="search-box" role="search" action="/search" aria-busy={pending} onSubmit={(event) => {
         event.preventDefault();
         if (!value.trim()) return;
         if (showSuggestions && selected >= 0) { pick(results[selected].id); return; }
-        setFocused(false); input.current?.blur(); router.push(`/search?q=${encodeURIComponent(value.trim())}`);
+        navigate(`/search?q=${encodeURIComponent(value.trim())}`);
       }}>
         <Search size={14} aria-hidden="true" />
         <input ref={input} type="search" name="q" placeholder="搜索相册" aria-label="搜索相册" value={value}
@@ -51,21 +66,25 @@ export function SiteHeader({ models, query = "" }: { models: Model[]; query?: st
           aria-autocomplete="list" aria-activedescendant={showSuggestions && selected >= 0 ? `suggestion-${selected}` : undefined}
           onChange={(event) => { setValue(event.target.value); setSelected(-1); }} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
           onKeyDown={(event) => {
-            if (event.key === "Escape") { setFocused(false); input.current?.blur(); }
+            if (event.key === "Escape") { event.preventDefault(); setFocused(false); setSelected(-1); if (!showSuggestions) input.current?.blur(); }
             if (showSuggestions && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
               event.preventDefault(); setSelected((old) => event.key === "ArrowDown" ? (old + 1) % results.length : old <= 0 ? results.length - 1 : old - 1);
             }
           }} />
         {value ? <button type="button" className="search-clear" aria-label="清空搜索" onMouseDown={(event) => event.preventDefault()} onClick={() => { setValue(""); setSelected(-1); input.current?.focus(); }}><X size={12} /></button> : <kbd aria-hidden="true">/</kbd>}
-        {showSuggestions && <ul id="model-suggestions" className="search-suggestions" role="listbox" aria-label="匹配模特">
-          {results.map((model, index) => <li id={`suggestion-${index}`} role="option" aria-selected={selected === index} key={model.id} className={cn(selected === index && "is-selected")}
+        <AnimatePresence>{showSuggestions && <motion.ul id="model-suggestions" className="search-suggestions" role="listbox" aria-label="匹配模特"
+          initial={{ opacity: 0, y: -4, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -3, scale: 0.99 }} transition={{ duration: 0.16, ease: [0.2, 0.7, 0.2, 1] }}>
+          {results.map((model, index) => {
+            const match = model.name.toLocaleLowerCase().indexOf(value.trim().toLocaleLowerCase());
+            const end = match + value.trim().length;
+            return <li id={`suggestion-${index}`} role="option" aria-selected={selected === index} key={model.id} className={cn(selected === index && "is-selected")}
             onMouseEnter={() => setSelected(index)} onMouseDown={(event) => { event.preventDefault(); pick(model.id); }}>
-            <span>{model.name}</span><small>{model.albumCount} 个图集</small>
-          </li>)}
-        </ul>}
+            <span>{model.name.slice(0, match)}<mark>{model.name.slice(match, end)}</mark>{model.name.slice(end)}</span><small>{model.albumCount} 个图集</small>
+          </li>; })}
+        </motion.ul>}</AnimatePresence>
       </form>
-      <Link href="/random" prefetch={false} className="icon-button" aria-label="随机浏览图集" title="随机漫游"><Dice5 /></Link>
-      <Link href="/library" className={cn("icon-button", pathname === "/library" && "is-active")} aria-label="我的收藏" title="我的收藏"><Bookmark /></Link>
+      <Link href="/random" prefetch={false} className="icon-button random-button" aria-label="随机浏览图集" title="随机漫游"><Dice5 /><NavigationHint /></Link>
+      <Link href="/library" className={cn("icon-button library-button", pathname === "/library" && "is-active")} aria-label="我的收藏" aria-current={pathname === "/library" ? "page" : undefined} title="我的收藏"><Bookmark /><NavigationHint /></Link>
       <ThemeToggle />
     </div>
   </header></div>;

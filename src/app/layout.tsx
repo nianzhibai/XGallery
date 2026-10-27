@@ -14,5 +14,5 @@ export const viewport: Viewport = { width: "device-width", initialScale: 1, colo
 const themeScript = `(function(){try{var t=localStorage.getItem('xgallery-theme');if(t!=='light'&&t!=='dark')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.dataset.theme=t}catch(e){}})()`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return <html lang="zh-CN" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head><body><a className="skip-link" href="#main-content">跳转到主要内容</a><Providers>{children}<BackToTop /></Providers></body></html>;
+  return <html lang="zh-CN" data-scroll-behavior="smooth" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head><body><a className="skip-link" href="#main-content">跳转到主要内容</a><Providers>{children}<BackToTop /></Providers></body></html>;
 }

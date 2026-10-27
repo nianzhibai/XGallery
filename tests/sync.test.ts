@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { after, test } from "node:test";
-import { mkdir, mkdtemp, readFile, rename, rm, symlink, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rename, rm, symlink, utimes, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import sharp from "sharp";
@@ -34,6 +34,7 @@ test("索引支持中文、嵌套目录、自然排序和 EXIF 方向，并安�
   assert.deepEqual([photos[1].width, photos[1].height], [90, 60]);
   await t.test("媒体服务原样返回文件，保留 EXIF，下载和缓存行为正确", async () => {
     const { GET } = await import("../src/app/api/media/[id]/route");
+    const { GET: getPreview } = await import("../src/app/api/media/[id]/preview/[version]/route");
     const bytes = await readFile(path.join(albumPath, "10.jpg"));
     const url = `http://localhost/api/media/${photos[1].id}`;
     const context = { params: Promise.resolve({ id: photos[1].id }) };
@@ -51,12 +52,22 @@ test("索引支持中文、嵌套目录、自然排序和 EXIF 方向，并安�
     const download = await GET(new Request(`${url}?download=1`), context);
     assert.match(download.headers.get("content-disposition")!, /^attachment;/);
     assert.deepEqual(Buffer.from(await download.arrayBuffer()), bytes);
+    const preview = await getPreview(new Request(url), { params: Promise.resolve({ id: photos[1].id, version: photos[1].version }) });
+    assert.equal(preview.status, 200);
+    const invalidVersion = await getPreview(new Request(url), { params: Promise.resolve({ id: photos[1].id, version: "invalid" }) });
+    assert.equal(invalidVersion.status, 404);
   });
   assert.equal(setLike(album.id, "test-visitor", true), 1);
   assert.equal(setLike(album.id, "test-visitor", true), 1, "重复请求不重复计数");
   await syncAlbums();
   assert.equal(getAlbums()[0].id, album.id);
   assert.equal(getAlbums()[0].likes, 1, "重新索引保留点赞");
+
+  const updatedTime = new Date(Date.now() + 10_000);
+  await utimes(path.join(albumPath, "02.jpg"), updatedTime, updatedTime);
+  await syncAlbums();
+  assert.notEqual(getAlbums()[0].coverVersion, album.coverVersion, "封面变更后缩略图缓存地址更新");
+  assert.notEqual(getPhotos(album.id)[0].version, photos[0].version, "照片变更后缩略图缓存地址更新");
 
   await rm(path.join(albumPath, "02.jpg"));
   await syncAlbums();

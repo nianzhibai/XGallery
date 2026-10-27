@@ -10,6 +10,7 @@ test("首页卡片无需 JavaScript 即可显示和打开图集", async ({ brows
     await expect(card).toHaveCSS("opacity", "1");
     const cover = card.locator("img");
     await expect.poll(() => cover.evaluate((image) => (image as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
+    await expect(cover).toHaveCSS("opacity", "1");
     await card.locator(".album-cover").click();
     await expect(page.locator(".album-title")).toBeVisible();
   } finally { await context.close(); }
@@ -26,6 +27,9 @@ test("真实图集的浏览、灯箱、收藏、历史、点赞和搜索", async
   const albumUrl = page.url();
   const count = await page.locator(".photo-tile").count();
   expect(count).toBeGreaterThan(0);
+  const wallImage = page.locator(".photo-tile img").first();
+  await expect(wallImage).toHaveAttribute("src", /^\/_next\/image\?/);
+  await expect.poll(() => wallImage.evaluate((image) => (image as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
 
   await page.getByRole("button", { name: "收藏", exact: true }).click();
   await expect(page.getByRole("button", { name: "已收藏", exact: true })).toHaveAttribute("aria-pressed", "true");
@@ -124,21 +128,30 @@ test("主题持久化、手机布局、空结果和随机图集", async ({ page 
   expect(response?.status()).toBe(404);
 });
 
-test("首页直接显示原图、原文件下载与条件缓存", async ({ page, request }) => {
+test("首页使用响应式缩略图，原文件下载与条件缓存保持可用", async ({ page, request }) => {
   await page.goto("/");
-  const src = await page.locator(".album-cover img").first().getAttribute("src");
-  expect(src).toMatch(/\?original=1$/);
-  const display = await request.get(src!);
+  const image = page.locator(".album-cover img").first();
+  const src = await image.evaluate((element) => (element as HTMLImageElement).currentSrc);
+  const optimized = new URL(src);
+  expect(optimized.pathname).toBe("/_next/image");
+  const source = new URL(optimized.searchParams.get("url")!, page.url());
+  expect(source.pathname).toMatch(/^\/api\/media\/[a-f0-9]{24}\/preview\/\d+-\d+$/);
+  const originalPath = source.pathname.replace(/\/preview\/[^/]+$/, "");
+  const thumbnail = await request.get(src, { headers: { Accept: "image/webp" } });
+  expect(thumbnail.status()).toBe(200);
+  expect(thumbnail.headers()["content-type"]).toMatch(/^image\//);
+  const originalUrl = `${originalPath}?original=1`;
+  const display = await request.get(originalUrl);
   expect(display.status()).toBe(200);
   expect(display.headers()["content-type"]).toMatch(/^image\//);
-  const original = await request.get(`${src!.split("?")[0]}?original=1&download=1`);
+  const original = await request.get(`${originalPath}?original=1&download=1`);
   expect(original.status()).toBe(200);
   expect(original.headers()["content-disposition"]).toMatch(/^attachment;/);
   expect(original.headers()["content-type"]).toMatch(/^image\//);
   expect(await original.body()).toEqual(await display.body());
   const sources = await page.locator(".album-cover img").evaluateAll((images) => images.map((image) => image.getAttribute("src")));
-  expect(sources.every((source) => source?.endsWith("?original=1"))).toBe(true);
-  const cached = await request.get(src!, { headers: { "If-None-Match": display.headers().etag } });
+  expect(sources.every((source) => source?.startsWith("/_next/image?"))).toBe(true);
+  const cached = await request.get(originalUrl, { headers: { "If-None-Match": display.headers().etag } });
   expect(cached.status()).toBe(304);
   const unknown = await request.get("/api/media/not-an-id");
   expect(unknown.status()).toBe(404);

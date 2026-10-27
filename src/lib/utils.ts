@@ -12,6 +12,10 @@ export function imageUrl(id: string) {
   return `/api/media/${id}?original=1`;
 }
 
+export function thumbnailUrl(id: string, version: string) {
+  return `/api/media/${id}/preview/${encodeURIComponent(version)}`;
+}
+
 export function shuffle<T>(items: T[]): T[] {
   const result = [...items];
   for (let i = result.length - 1; i > 0; i--) {

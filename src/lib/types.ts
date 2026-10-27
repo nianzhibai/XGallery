@@ -4,6 +4,7 @@ export type Album = {
   modelId: string;
   modelName: string;
   coverId: string;
+  coverVersion: string;
   photoCount: number;
   totalBytes: number;
   updatedAt: number;
@@ -24,6 +25,7 @@ export type Photo = {
   width: number;
   height: number;
   position: number;
+  version: string;
 };
 
 export type LibraryState = {

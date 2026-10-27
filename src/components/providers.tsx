@@ -52,7 +52,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <LibraryContext.Provider value={{ library, ready, toast, toggleFavorite, visit, setLiked, clearRecent }}>
       {children}
       <div className="toast-region" role="status" aria-live="polite">
-        <AnimatePresence>{message && <motion.div className="toast" key={message} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}>{message}</motion.div>}</AnimatePresence>
+        <AnimatePresence>{message && <motion.div className="toast" key={message} initial={{ opacity: 0, y: 10, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 6 }} transition={{ duration: 0.24, ease: [0.2, 0.7, 0.2, 1] }}>{message}</motion.div>}</AnimatePresence>
       </div>
     </LibraryContext.Provider>
   </MotionConfig>;

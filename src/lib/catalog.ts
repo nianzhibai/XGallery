@@ -7,6 +7,7 @@ export function getAlbums(): Album[] {
   return getDatabase().db.select({
     id: albums.id, title: albums.title, modelId: albums.modelId,
     modelName: models.name, coverId: albums.coverId, photoCount: albums.photoCount,
+    coverVersion: sql<string>`(select cast(p.modified_at as text) || '-' || cast(p.bytes as text) from photos p where p.id = ${albums.coverId})`,
     totalBytes: albums.totalBytes, updatedAt: albums.updatedAt,
     likes: sql<number>`(select count(*) from likes where likes.album_id = ${albums.id})`,
   }).from(albums).innerJoin(models, eq(models.id, albums.modelId))
@@ -31,6 +32,7 @@ export function getPhotos(albumId: string) {
   return getDatabase().db.select({
     id: photos.id, filename: photos.filename,
     width: photos.width, height: photos.height, position: photos.position,
+    version: sql<string>`cast(${photos.modifiedAt} as text) || '-' || cast(${photos.bytes} as text)`,
   }).from(photos).where(eq(photos.albumId, albumId)).orderBy(asc(photos.position)).all();
 }
 
