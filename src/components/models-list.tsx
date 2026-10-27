@@ -16,7 +16,7 @@ export function ModelsList({ models }: { models: Model[] }) {
   return <>
     <PageHeading title="模特" description={`${models.length} 位模特 · 点击进入模特主页`}>
       <div className="model-tools"><label className="model-search"><Search size={13} /><input placeholder="查找模特" aria-label="查找模特" value={query} onChange={(event) => setQuery(event.target.value)} /></label>
-        <DropdownMenu.Root><DropdownMenu.Trigger asChild><Button size="small">{sort === "albums" ? "按图集数" : "按名称"}<ChevronDown size={12} /></Button></DropdownMenu.Trigger><DropdownMenu.Portal><DropdownMenu.Content className="dropdown-content" align="end" sideOffset={8}>
+        <DropdownMenu.Root modal={false}><DropdownMenu.Trigger asChild><Button size="small">{sort === "albums" ? "按图集数" : "按名称"}<ChevronDown size={12} /></Button></DropdownMenu.Trigger><DropdownMenu.Portal><DropdownMenu.Content className="dropdown-content" align="end" sideOffset={8}>
           <DropdownMenu.RadioGroup value={sort} onValueChange={setSort}><DropdownMenu.RadioItem className="dropdown-item" value="albums">按图集数排序</DropdownMenu.RadioItem><DropdownMenu.RadioItem className="dropdown-item" value="name">按名称排序</DropdownMenu.RadioItem></DropdownMenu.RadioGroup>
         </DropdownMenu.Content></DropdownMenu.Portal></DropdownMenu.Root>
       </div>
