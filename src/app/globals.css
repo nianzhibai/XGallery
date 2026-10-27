@@ -288,7 +288,7 @@ html.theme-transition::view-transition-old(root), html.theme-transition::view-tr
 .pswp__filmstrip { position: absolute; left: 0; right: 0; bottom: 20px; display: flex; align-items: center; gap: 8px; overflow-x: auto; overflow-y: hidden; padding: 6px 18px 10px; scrollbar-width: thin; scrollbar-color: #6c6251 #0000; overscroll-behavior: contain; transition: opacity .3s; animation: filmstrip-enter .36s var(--ease) .1s backwards; }
 @keyframes filmstrip-enter { from { opacity: 0; transform: translateY(8px); } }
 .pswp:not(.pswp--ui-visible) .pswp__filmstrip { opacity: 0; pointer-events: none; }
-.pswp__like-heart { position: absolute; z-index: 20; width: 72px; height: 72px; color: #d4a574; pointer-events: none; filter: drop-shadow(0 4px 12px #0004); animation: photo-heart .72s var(--ease) forwards; }
+.pswp__like-heart { position: absolute; z-index: 20; width: 72px; height: 72px; color: #e5484d; pointer-events: none; filter: drop-shadow(0 4px 12px #0004); animation: photo-heart .72s var(--ease) forwards; }
 @keyframes photo-heart { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.3) rotate(-8deg); } 25% { opacity: 1; transform: translate(-50%, -50%) scale(1.12) rotate(4deg); } 55% { opacity: 1; transform: translate(-50%, -60%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -130%) scale(.9); } }
 .pswp__filmstrip button { display: block; padding: 0; flex-shrink: 0; width: 50px; height: 50px; border: 1px solid transparent; border-radius: 2px; opacity: .4; transition: opacity .2s, border-color .2s, transform .2s var(--ease); }
 .pswp__filmstrip button[aria-current="true"] { opacity: 1; border-color: #d4a574; transform: translateY(-2px); }
