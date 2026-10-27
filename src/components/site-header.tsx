@@ -1,6 +1,6 @@
 "use client";
 
-import Link, { useLinkStatus } from "next/link";
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { AnimatePresence, motion } from "motion/react";
@@ -9,11 +9,6 @@ import type { Model } from "@/lib/types";
 import { ThemeToggle } from "./theme-toggle";
 import { cn } from "@/lib/utils";
 import { useScrollHeader } from "@/lib/use-scroll-header";
-
-function NavigationHint() {
-  const { pending } = useLinkStatus();
-  return <span className="nav-pending" data-pending={pending || undefined} aria-hidden="true" />;
-}
 
 export function SiteHeader({ models, query = "" }: { models: Model[]; query?: string }) {
   const pathname = usePathname();
@@ -51,8 +46,8 @@ export function SiteHeader({ models, query = "" }: { models: Model[]; query?: st
     <Link href="/" className="brand" aria-label="XGallery 首页"><span className="brand-mark" /><span className="brand-title">XGallery</span></Link>
     <div className="header-actions">
       <nav className="header-nav" aria-label="浏览">
-        <Link className={cn("nav-pill", (pathname === "/models" || pathname.startsWith("/model/")) && "is-active")} href="/models" aria-label="模特" aria-current={pathname === "/models" ? "page" : undefined} title="模特"><UsersRound /><span className="nav-label">模特</span><NavigationHint /></Link>
-        <Link className={cn("nav-pill", pathname === "/popular" && "is-active")} href="/popular" aria-label="最受喜爱" aria-current={pathname === "/popular" ? "page" : undefined} title="最受喜爱"><Heart /><span className="nav-label">最受喜爱</span><NavigationHint /></Link>
+        <Link className={cn("nav-pill", (pathname === "/models" || pathname.startsWith("/model/")) && "is-active")} href="/models" aria-label="模特" aria-current={pathname === "/models" ? "page" : undefined} title="模特"><UsersRound /><span className="nav-label">模特</span></Link>
+        <Link className={cn("nav-pill", pathname === "/popular" && "is-active")} href="/popular" aria-label="最受喜爱" aria-current={pathname === "/popular" ? "page" : undefined} title="最受喜爱"><Heart /><span className="nav-label">最受喜爱</span></Link>
       </nav>
       <form className="search-box" role="search" action="/search" aria-busy={pending} onSubmit={(event) => {
         event.preventDefault();
@@ -83,8 +78,8 @@ export function SiteHeader({ models, query = "" }: { models: Model[]; query?: st
           </li>; })}
         </motion.ul>}</AnimatePresence>
       </form>
-      <Link href="/random" prefetch={false} className="icon-button random-button" aria-label="随机浏览图集" title="随机漫游"><Dice5 /><NavigationHint /></Link>
-      <Link href="/library" className={cn("icon-button library-button", pathname === "/library" && "is-active")} aria-label="我的收藏" aria-current={pathname === "/library" ? "page" : undefined} title="我的收藏"><Bookmark /><NavigationHint /></Link>
+      <Link href="/random" prefetch={false} className="icon-button random-button" aria-label="随机浏览图集" title="随机漫游"><Dice5 /></Link>
+      <Link href="/library" className={cn("icon-button library-button", pathname === "/library" && "is-active")} aria-label="我的收藏" aria-current={pathname === "/library" ? "page" : undefined} title="我的收藏"><Bookmark /></Link>
       <ThemeToggle />
     </div>
   </header></div>;
