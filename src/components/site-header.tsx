@@ -79,7 +79,7 @@ export function SiteHeader({ models, query = "" }: { models: Model[]; query?: st
           </li>; })}
         </motion.ul>}</AnimatePresence>
       </form>
-      <Tooltip label="随机漫游"><Link href="/random" prefetch={false} className="icon-button random-button" aria-label="随机浏览图集"><Dice5 /></Link></Tooltip>
+      <Tooltip label="随机漫游"><a href="/random" className="icon-button random-button" aria-label="随机浏览图集"><Dice5 /></a></Tooltip>
       <Tooltip label="我的收藏"><Link href="/library" className={cn("icon-button library-button", pathname === "/library" && "is-active")} aria-label="我的收藏" aria-current={pathname === "/library" ? "page" : undefined}><Bookmark /></Link></Tooltip>
       <ThemeToggle />
     </div>

@@ -1,9 +1,8 @@
-import { NextResponse } from "next/server";
 import { getAlbums } from "@/lib/catalog";
 
 export const dynamic = "force-dynamic";
-export function GET(request: Request) {
+export function GET() {
   const albums = getAlbums();
   const album = albums[Math.floor(Math.random() * albums.length)];
-  return NextResponse.redirect(new URL(album ? `/album/${album.id}` : "/", request.url));
+  return new Response(null, { status: 307, headers: { Location: album ? `/album/${album.id}` : "/", "Cache-Control": "no-store" } });
 }

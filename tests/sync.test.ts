@@ -28,6 +28,11 @@ test("索引支持中文、嵌套目录、自然排序和 EXIF 方向，并安�
   assert.deepEqual({ models: first.models, albums: first.albums, photos: first.photos }, { models: 1, albums: 1, photos: 2 });
   assert.equal(first.warnings.length, 1);
   const album = getAlbums()[0];
+  const { GET: randomAlbum } = await import("../src/app/random/route");
+  const randomResponse = randomAlbum();
+  assert.equal(randomResponse.status, 307);
+  assert.equal(randomResponse.headers.get("location"), `/album/${album.id}`, "随机图集使用站内相对地址");
+  assert.equal(randomResponse.headers.get("cache-control"), "no-store");
   assert.equal(album.title, "晨光");
   const photos = getPhotos(album.id);
   assert.deepEqual(photos.map((photo) => photo.filename), ["02.jpg", "10.jpg"]);
@@ -90,5 +95,6 @@ test("索引支持中文、嵌套目录、自然排序和 EXIF 方向，并安�
   await rm(path.join(root, "测试模特"), { recursive: true });
   await syncAlbums();
   assert.equal(getAlbums().length, 0);
+  assert.equal(randomAlbum().headers.get("location"), "/", "没有图集时返回首页");
   assert.equal(getPhotos(album.id).length, 0);
 });

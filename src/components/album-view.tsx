@@ -49,7 +49,7 @@ export function AlbumView({ album, photos, related, modelAlbumCount }: { album: 
   }
 
   return <div className="album-page page-enter">
-    <header ref={header} className="album-topbar scroll-header"><Button variant="ghost" className="back-link" onClick={() => window.history.length > 1 ? router.back() : router.push("/")}><ChevronLeft size={17} />返回</Button><div className="album-top-actions"><span>{photos.length} 张</span><Tooltip label="随机漫游"><Link href="/random" prefetch={false} className="icon-button" aria-label="随机浏览图集"><Dice5 /></Link></Tooltip><ThemeToggle /></div></header>
+    <header ref={header} className="album-topbar scroll-header"><Button variant="ghost" className="back-link" onClick={() => window.history.length > 1 ? router.back() : router.push("/")}><ChevronLeft size={17} />返回</Button><div className="album-top-actions"><span>{photos.length} 张</span><Tooltip label="随机漫游"><a href="/random" className="icon-button" aria-label="随机浏览图集"><Dice5 /></a></Tooltip><ThemeToggle /></div></header>
     <main id="main-content" className="album-main">
       <div className="album-intro">
         <Link href={`/model/${album.modelId}`} className="model-breadcrumb"><span className="breadcrumb-label">模特主页</span><span>{album.modelName}</span><span className="breadcrumb-meta">全部 {modelAlbumCount} 个图集 <ArrowRight size={12} /></span></Link>
