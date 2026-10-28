@@ -11,14 +11,14 @@ import { Tooltip } from "./ui/tooltip";
 import { useLibrary } from "./providers";
 
 export const AlbumCard = forwardRef<HTMLElement, {
-  album: Album; index?: number; overlay?: boolean; showModelName?: boolean; remove?: () => void; removeLabel?: string; onEnterComplete?: () => void;
-}>(function AlbumCard({ album, index = 0, overlay = false, showModelName = true, remove, removeLabel = "取消收藏", onEnterComplete }, ref) {
+  album: Album; index?: number; overlay?: boolean; remove?: () => void; removeLabel?: string; onEnterComplete?: () => void;
+}>(function AlbumCard({ album, index = 0, overlay = false, remove, removeLabel = "取消收藏", onEnterComplete }, ref) {
   const { library } = useLibrary();
   const saved = library.favorites.includes(album.id);
   const image = useRef<HTMLImageElement>(null);
   const [imageState, setImageState] = useState<"loading" | "loaded" | "error">("loading");
   const { props: cover } = getImageProps({ src: thumbnailUrl(album.coverId, album.coverVersion), alt: `${album.modelName} · ${album.title}`, width: 600, height: 800,
-    sizes: "(max-width: 440px) 100vw, (max-width: 680px) 50vw, (max-width: 1100px) 33vw, 25vw", loading: index < 4 ? "eager" : "lazy" });
+    sizes: "(max-width: 420px) 100vw, (max-width: 760px) 50vw, (max-width: 1100px) 33vw, 25vw", loading: index < 4 ? "eager" : "lazy" });
 
   useEffect(() => {
     const element = image.current;
@@ -36,7 +36,7 @@ export const AlbumCard = forwardRef<HTMLElement, {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img {...cover} ref={image} onLoad={() => setImageState("loaded")} onError={() => setImageState("error")} />
         {imageState === "error" && <span className="cover-error"><ImageOff size={22} strokeWidth={1} /><span>封面暂时无法加载</span></span>}
-        {overlay && <span className="cover-caption"><span className="cover-title">{showModelName ? `${album.modelName} · ${album.title}` : album.title}</span><span className="cover-meta">{album.photoCount} 张</span></span>}
+        {overlay && <span className="cover-caption"><span className="cover-title">{album.modelName} · {album.title}</span><span className="cover-meta">{album.photoCount} 张</span></span>}
         <span className="hover-arrow" aria-hidden="true"><ArrowUpRight size={15} /></span>
         {saved && !remove && <Tooltip label="已收藏"><span className="saved-badge"><Bookmark size={13} fill="currentColor" /></span></Tooltip>}
       </Link>
@@ -46,13 +46,13 @@ export const AlbumCard = forwardRef<HTMLElement, {
   </motion.article>;
 });
 
-export function AlbumGrid({ albums, overlay = false, showModelName = true, onRemove, removeLabel, batchKey = 0, onEnterComplete }: {
-  albums: Album[]; overlay?: boolean; showModelName?: boolean; onRemove?: (id: string) => void; removeLabel?: string; batchKey?: number; onEnterComplete?: () => void;
+export function AlbumGrid({ albums, overlay = false, onRemove, removeLabel, batchKey = 0, onEnterComplete }: {
+  albums: Album[]; overlay?: boolean; onRemove?: (id: string) => void; removeLabel?: string; batchKey?: number; onEnterComplete?: () => void;
 }) {
   const reducedMotion = useReducedMotion();
   return <AnimatePresence mode="wait"><motion.div key={batchKey} className="albums-grid" initial={false}
     exit={{ opacity: 0, y: reducedMotion ? 0 : -5 }} transition={{ duration: reducedMotion ? 0 : 0.18, ease: [0.4, 0, 1, 1] }}>
-    <AnimatePresence initial={false} mode="popLayout">{albums.map((album, index) => <AlbumCard key={album.id} album={album} index={index} overlay={overlay} showModelName={showModelName}
+    <AnimatePresence initial={false} mode="popLayout">{albums.map((album, index) => <AlbumCard key={album.id} album={album} index={index} overlay={overlay}
       remove={onRemove ? () => onRemove(album.id) : undefined} removeLabel={removeLabel} onEnterComplete={index === albums.length - 1 ? onEnterComplete : undefined} />)}</AnimatePresence>
   </motion.div></AnimatePresence>;
 }

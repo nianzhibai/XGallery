@@ -148,7 +148,8 @@ html.theme-transition::view-transition-old(root), html.theme-transition::view-tr
 .refresh-button[aria-disabled="true"] { color: var(--accent-ink); border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); background: color-mix(in srgb, var(--accent) 5%, transparent); }
 .refresh-icon { display: inline-flex; }
 .refresh-button .refresh-icon svg { transition: transform .6s cubic-bezier(.5, 0, .2, 1); }
-.albums-grid { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); column-gap: clamp(20px, 3vw, 40px); row-gap: clamp(40px, 5vw, 64px); }
+.albums-grid { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); column-gap: clamp(20px, 3vw, 40px); row-gap: clamp(48px, 6vw, 80px); }
+.home-section-first .albums-grid { row-gap: clamp(40px, 5vw, 64px); }
 .album-card { position: relative; min-width: 0; }
 .album-card-body { animation: album-enter .65s var(--ease) both; animation-delay: calc(var(--card-index, 0) * 40ms); }
 @keyframes album-enter { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
@@ -377,7 +378,6 @@ html.theme-transition::view-transition-old(root), html.theme-transition::view-tr
 @media (hover: hover) and (min-width: 761px) { .theme-toggle:hover:not(:disabled):not([aria-disabled="true"]) { background: transparent; } }
 @media (hover: none) { .card-remove { opacity: 1; } }
 
-@media (min-width: 1800px) { .site-header, .page-container, .album-page { max-width: 1600px; } }
 @media (max-width: 1100px) {
   .header-actions { gap: 10px; }
   .search-box { width: 210px; }
@@ -391,7 +391,6 @@ html.theme-transition::view-transition-old(root), html.theme-transition::view-tr
   .page-heading { align-items: flex-start; }
   .model-tools { flex-direction: column; align-items: flex-end; gap: 8px; }
   .model-search input { width: 100px; }
-  .popular-grid { column-gap: 20px; }
   .popular-card h2 { font-size: 15px; }
   .album-intro { padding-top: 18px; }
 }
@@ -403,6 +402,8 @@ html.theme-transition::view-transition-old(root), html.theme-transition::view-tr
   .theme-toggle { width: 36px; height: 36px; border: 1px solid var(--line-strong); color: var(--ink-2); }
   .theme-scene { display: none; }
   .theme-mobile-icon { display: block; }
+  .albums-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px 16px; }
+  .popular-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 640px) {
   .site-header { flex-wrap: wrap; padding-top: 22px; padding-bottom: 20px; row-gap: 18px; }
@@ -423,7 +424,6 @@ html.theme-transition::view-transition-old(root), html.theme-transition::view-tr
   .section-head { margin-bottom: 30px; align-items: flex-start; }
   .related-section .section-head { align-items: flex-start; }
   .refresh-button { min-width: auto; min-height: 38px; padding: 9px 14px; font-size: 12px; }
-  .albums-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 38px 16px; }
   .cover-caption { left: 14px; right: 14px; bottom: 13px; gap: 6px; }
   .album-card-title { font-size: 15px; }
   .album-card-meta { gap: 7px; font-size: 10px; }
@@ -435,7 +435,6 @@ html.theme-transition::view-transition-old(root), html.theme-transition::view-tr
   .model-tools { flex-direction: row; align-items: center; width: 100%; justify-content: space-between; }
   .model-search { flex: 1; max-width: 240px; }
   .model-search input { width: 100%; }
-  .popular-grid { grid-template-columns: 1fr; gap: 32px; }
   .rank-list li { grid-template-columns: 2.2em minmax(0, 1fr); }
   .rank-list-score { grid-column: 2; }
   .popular-rank.top-rank { width: 34px; height: 34px; font-size: 16px; }
@@ -458,7 +457,6 @@ html.theme-transition::view-transition-old(root), html.theme-transition::view-tr
   .card-remove { opacity: 1; }
 }
 @media (max-width: 440px) {
-  .albums-grid { grid-template-columns: 1fr; row-gap: 40px; }
   .cover-caption { left: 20px; right: 20px; bottom: 19px; }
   .section-head { flex-wrap: wrap; gap: 22px; }
   .section-head .refresh-button { margin-right: calc(100% - 105px); }
@@ -471,6 +469,9 @@ html.theme-transition::view-transition-old(root), html.theme-transition::view-tr
   .search-box { max-width: none; }
   .brand { gap: 13px; }
   .breadcrumb-meta { display: none; }
+}
+@media (max-width: 420px) {
+  .albums-grid { grid-template-columns: 1fr; gap: 36px; }
 }
 @media (max-width: 360px) {
   .header-actions { gap: 7px; }

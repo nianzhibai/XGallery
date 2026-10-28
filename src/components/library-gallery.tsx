@@ -17,7 +17,7 @@ export function LibraryGallery({ albums, tab }: { albums: Album[]; tab: string }
       <nav className="library-tabs" aria-label="我的图库"><Link href="/library" className={!isRecent ? "is-active" : ""}>收藏 <span>{library.favorites.length}</span></Link><Link href="/library?tab=recent" className={isRecent ? "is-active" : ""}>最近看过 <span>{library.recent.length}</span></Link></nav>
     </PageHeading>
     {!ready ? <div className="library-loading" aria-label="正在读取收藏" /> : visible.length ? <>
-      <AlbumGrid albums={visible} overlay showModelName={false} removeLabel={isRecent ? "移除浏览记录" : "取消收藏"} onRemove={(id) => {
+      <AlbumGrid albums={visible} overlay removeLabel={isRecent ? "移除浏览记录" : "取消收藏"} onRemove={(id) => {
         if (isRecent) { removeRecent(id); toast("已移除浏览记录"); }
         else { toggleFavorite(id); toast("已取消收藏"); }
       }} />

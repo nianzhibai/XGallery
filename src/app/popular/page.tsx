@@ -14,7 +14,7 @@ export default function PopularPage() {
   return <><SiteHeader models={getModels()} /><main id="main-content" className="page-container page-enter"><PageHeading title="最受喜爱" description={`按累计点赞排序 · 前 ${albums.length} 名`} />
     {albums.length ? <><ol className="popular-grid">{albums.slice(0, 3).map((album, index) => {
       const { props: cover } = getImageProps({ src: thumbnailUrl(album.coverId, album.coverVersion), alt: `${album.modelName} · ${album.title}`, width: 600, height: 750,
-        sizes: "(max-width: 680px) 100vw, 33vw", loading: "eager" });
+        sizes: "(max-width: 760px) 100vw, 33vw", loading: "eager" });
       return <li className="popular-card" key={album.id}><Link href={`/album/${album.id}`} className="popular-cover"><span className={`popular-rank${index === 0 ? " top-rank" : ""}`}>{index + 1}</span>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img {...cover} />

@@ -24,8 +24,11 @@ test("浏览记录可逐条移除且不影响收藏", async ({ page }) => {
   await expect(page.locator(".album-card")).toHaveCount(1);
   await page.goto("/library");
   await expect(page.locator(".album-card-overlay")).toHaveCount(1);
+  await expect(page.locator(".album-card .cover-title")).toHaveText(title);
   await page.goto(href!);
-  await expect(page.locator(".album-title")).toHaveText(title);
+  const modelName = await page.locator(".model-breadcrumb span").nth(1).innerText();
+  const albumTitle = await page.locator(".album-title").innerText();
+  expect(title).toBe(`${modelName} · ${albumTitle}`);
 });
 
 test("收藏为空时显示简洁提示", async ({ page }) => {
