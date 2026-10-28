@@ -2,19 +2,19 @@
 
 import { Tooltip } from "./ui/tooltip";
 
-import Link from "next/link";
+import { NavigationLink as Link } from "./navigation-link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { ArrowRight, Bookmark, ChevronLeft, Dice5, Heart, Share2 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import type { Album, Photo } from "@/lib/types";
-import { formatBytes } from "@/lib/utils";
 import { AlbumGrid } from "./album-card";
 import { PhotoWall } from "./photo-wall";
 import { useLibrary } from "./providers";
 import { ThemeToggle } from "./theme-toggle";
 import { Button } from "./ui/button";
 import { useScrollHeader } from "@/lib/use-scroll-header";
+import { useDocumentNavigationProgress, useNavigationPending } from "./navigation-progress";
 
 export function AlbumView({ album, photos, related, modelAlbumCount }: { album: Album; photos: Photo[]; related: Album[]; modelAlbumCount: number }) {
   const router = useRouter();
@@ -22,6 +22,9 @@ export function AlbumView({ album, photos, related, modelAlbumCount }: { album: 
   const { library, ready, toggleFavorite, visit, toast, setLiked } = useLibrary();
   const [likeCount, setLikeCount] = useState(album.likes);
   const [pending, setPending] = useState(false);
+  const [backPending, startBackTransition] = useTransition();
+  useNavigationPending(backPending);
+  const startDocumentNavigation = useDocumentNavigationProgress();
   const likeLock = useRef(false);
   const saved = library.favorites.includes(album.id);
   const liked = library.liked.includes(album.id);
@@ -49,7 +52,7 @@ export function AlbumView({ album, photos, related, modelAlbumCount }: { album: 
   }
 
   return <div className="album-page page-enter">
-    <header ref={header} className="album-topbar scroll-header"><Button variant="ghost" className="back-link" onClick={() => window.history.length > 1 ? router.back() : router.push("/")}><ChevronLeft size={17} />返回</Button><div className="album-top-actions"><span>{photos.length} 张</span><Tooltip label="随机漫游"><a href="/random" className="icon-button" aria-label="随机浏览图集"><Dice5 /></a></Tooltip><ThemeToggle /></div></header>
+    <header ref={header} className="album-topbar scroll-header"><Button variant="ghost" className="back-link" onClick={() => window.history.length > 1 ? router.back() : startBackTransition(() => router.push("/"))}><ChevronLeft size={17} />返回</Button><div className="album-top-actions"><span>{photos.length} 张</span><Tooltip label="随机漫游"><a href="/random" className="icon-button" aria-label="随机浏览图集" onClick={startDocumentNavigation}><Dice5 /></a></Tooltip><ThemeToggle /></div></header>
     <main id="main-content" className="album-main">
       <div className="album-intro">
         <Link href={`/model/${album.modelId}`} className="model-breadcrumb"><span className="breadcrumb-label">模特主页</span><span>{album.modelName}</span><span className="breadcrumb-meta">全部 {modelAlbumCount} 个图集 <ArrowRight size={12} /></span></Link>
@@ -59,13 +62,17 @@ export function AlbumView({ album, photos, related, modelAlbumCount }: { album: 
           <AnimatePresence initial={false} mode="popLayout"><motion.span key={likeCount} className="like-count" initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} transition={{ duration: 0.22, ease: [0.2, 0.7, 0.2, 1] }}>{likeCount}</motion.span></AnimatePresence>
         </Button>
           <Button size="small" className={`favorite-button${saved ? " is-active" : ""}`} onClick={() => { toggleFavorite(album.id); toast(saved ? "已取消收藏" : "已加入收藏"); }} aria-pressed={saved}><Bookmark size={13} fill={saved ? "currentColor" : "none"} /><span>{saved ? "已收藏" : "收藏"}</span></Button>
-          <Button size="small" onClick={() => void share()}><Share2 size={13} />分享</Button><span className="album-hint">点击照片沉浸浏览 · 双击大图点赞</span><span className="album-size">{formatBytes(album.totalBytes)}</span>
+          <Button size="small" onClick={() => void share()}><Share2 size={13} />分享</Button><span className="album-hint">点击照片沉浸浏览 · 双击大图点赞</span>
         </div>
       </div>
       <PhotoWall photos={photos} title={album.title} onLike={() => { if (!liked) void like(); }} />
-      <div className="wall-end"><span className="brand-mark" /><span>已欣赏全部 {photos.length} 张照片</span></div>
-      {related.length > 0 && <section className="home-section related-section"><div className="section-head"><div><h2 className="section-title">更多「{album.modelName}」</h2><p className="section-subtitle">继续发现同一份光影</p></div><Button asChild><Link href={`/model/${album.modelId}`}>模特主页<ArrowRight size={13} /></Link></Button></div><AlbumGrid albums={related} /></section>}
-      <div className="album-bottom"><Link href="/">返回 XGallery <ArrowRight size={13} /></Link></div>
+      {related.length > 0 && <section className="home-section related-section">
+        <div className="section-head">
+          <div><h2 className="section-title"><Link href={`/model/${album.modelId}`}>更多<span className="quote-mark">「</span>{album.modelName}<span className="quote-mark">」</span></Link></h2><p className="section-subtitle">{modelAlbumCount - 1} 个图集</p></div>
+          {modelAlbumCount - 1 > related.length && <Button asChild><Link href={`/model/${album.modelId}`}>进入模特主页<ArrowRight size={13} /></Link></Button>}
+        </div>
+        <AlbumGrid albums={related} overlay />
+      </section>}
     </main>
   </div>;
 }

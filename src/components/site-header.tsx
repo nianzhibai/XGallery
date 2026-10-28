@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { NavigationLink as Link } from "./navigation-link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { AnimatePresence, motion } from "motion/react";
@@ -10,6 +10,7 @@ import { Tooltip } from "./ui/tooltip";
 import { ThemeToggle } from "./theme-toggle";
 import { cn } from "@/lib/utils";
 import { useScrollHeader } from "@/lib/use-scroll-header";
+import { useDocumentNavigationProgress, useNavigationPending } from "./navigation-progress";
 
 export function SiteHeader({ models, query = "" }: { models: Model[]; query?: string }) {
   const pathname = usePathname();
@@ -17,6 +18,8 @@ export function SiteHeader({ models, query = "" }: { models: Model[]; query?: st
   const input = useRef<HTMLInputElement>(null);
   const header = useScrollHeader<HTMLDivElement>();
   const [pending, startTransition] = useTransition();
+  useNavigationPending(pending);
+  const startDocumentNavigation = useDocumentNavigationProgress();
   const [value, setValue] = useState(query);
   const [focused, setFocused] = useState(false);
   const [selected, setSelected] = useState(-1);
@@ -79,7 +82,7 @@ export function SiteHeader({ models, query = "" }: { models: Model[]; query?: st
           </li>; })}
         </motion.ul>}</AnimatePresence>
       </form>
-      <Tooltip label="随机漫游"><a href="/random" className="icon-button random-button" aria-label="随机浏览图集"><Dice5 /></a></Tooltip>
+      <Tooltip label="随机漫游"><a href="/random" className="icon-button random-button" aria-label="随机浏览图集" onClick={startDocumentNavigation}><Dice5 /></a></Tooltip>
       <Tooltip label="我的收藏"><Link href="/library" className={cn("icon-button library-button", pathname === "/library" && "is-active")} aria-label="我的收藏" aria-current={pathname === "/library" ? "page" : undefined}><Bookmark /></Link></Tooltip>
       <ThemeToggle />
     </div>

@@ -33,7 +33,7 @@ export function PhotoWall({ photos, title, onLike }: { photos: Photo[]; title: s
       bgOpacity: 0.97, loop: false, showHideAnimationType: "fade", showAnimationDuration: reducedMotion ? 0 : 300, hideAnimationDuration: reducedMotion ? 0 : 220,
       preload: [1, 1], preloaderDelay: 150, zoom: false,
       padding: { top: 65, bottom: 105, left: 20, right: 20 },
-      closeTitle: "关闭 (Esc)", arrowPrevTitle: "上一张", arrowNextTitle: "下一张",
+      closeTitle: "关闭", arrowPrevTitle: "上一张", arrowNextTitle: "下一张",
       errorMsg: "这张图片暂时无法加载，请关闭后重试。",
       imageClickAction: "toggle-controls",
       doubleTapAction: (_point, event) => likeAt(event.clientX, event.clientY),

@@ -11,10 +11,11 @@ const LibraryContext = createContext<{
   library: LibraryState; ready: boolean;
   toggleFavorite: (id: string) => void;
   visit: (id: string) => void;
+  removeRecent: (id: string) => void;
   setLiked: (id: string, value: boolean) => void;
   clearRecent: () => void;
   toast: (message: string) => void;
-}>({ library: initialLibrary, ready: false, toggleFavorite: () => {}, visit: () => {}, setLiked: () => {}, clearRecent: () => {}, toast: () => {} });
+}>({ library: initialLibrary, ready: false, toggleFavorite: () => {}, visit: () => {}, removeRecent: () => {}, setLiked: () => {}, clearRecent: () => {}, toast: () => {} });
 
 function parseLibrary(value: string | null): LibraryState {
   try {
@@ -46,12 +47,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const toast = useCallback((text: string) => setMessage(text), []);
   const toggleFavorite = useCallback((id: string) => setLibrary((state) => ({ ...state, favorites: state.favorites.includes(id) ? state.favorites.filter((item) => item !== id) : [id, ...state.favorites] })), []);
   const visit = useCallback((id: string) => setLibrary((state) => ({ ...state, recent: [id, ...state.recent.filter((item) => item !== id)].slice(0, 100) })), []);
+  const removeRecent = useCallback((id: string) => setLibrary((state) => ({ ...state, recent: state.recent.filter((item) => item !== id) })), []);
   const setLiked = useCallback((id: string, value: boolean) => setLibrary((state) => ({ ...state, liked: value ? [...new Set([...state.liked, id])] : state.liked.filter((item) => item !== id) })), []);
   const clearRecent = useCallback(() => setLibrary((state) => ({ ...state, recent: [] })), []);
 
   return <MotionConfig reducedMotion="user">
     <TooltipProvider delayDuration={450}>
-    <LibraryContext.Provider value={{ library, ready, toast, toggleFavorite, visit, setLiked, clearRecent }}>
+    <LibraryContext.Provider value={{ library, ready, toast, toggleFavorite, visit, removeRecent, setLiked, clearRecent }}>
       {children}
       <div className="toast-region" role="status" aria-live="polite">
         <AnimatePresence>{message && <motion.div className="toast" key={message} initial={{ opacity: 0, y: 10, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 6 }} transition={{ duration: 0.24, ease: [0.2, 0.7, 0.2, 1] }}>{message}</motion.div>}</AnimatePresence>

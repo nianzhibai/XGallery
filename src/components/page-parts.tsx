@@ -1,22 +1,16 @@
 "use client";
 
-import Link from "next/link";
+import { NavigationLink as Link } from "./navigation-link";
 import { useEffect, useState } from "react";
-import { ArrowUp, ArrowUpRight, ImageOff } from "lucide-react";
+import { ArrowUp } from "lucide-react";
 import { Button } from "./ui/button";
 
-export function EmptyState({ title, description, link = "/", action = "去逛逛" }: { title: string; description: string; link?: string; action?: string }) {
-  return <div className="empty-state"><div className="empty-card"><ImageOff size={24} strokeWidth={1} /><h2>{title}</h2><p>{description}</p><Button asChild><Link href={link}>{action}<ArrowUpRight size={13} /></Link></Button></div></div>;
+export function EmptyState({ title, description, action }: { title: string; description: string; action?: { href: string; label: string } }) {
+  return <div className="empty-state"><div className="empty-card"><h2>{title}</h2><p>{description}</p>{action && <Button asChild><Link href={action.href}>{action.label}</Link></Button>}</div></div>;
 }
 
-export function PageHeading({ title, description, children }: { title: string; description?: string; children?: React.ReactNode }) {
+export function PageHeading({ title, description, children }: { title: React.ReactNode; description?: string; children?: React.ReactNode }) {
   return <div className="page-heading"><div><h1>{title}</h1>{description && <p>{description}</p>}</div>{children}</div>;
-}
-
-export function Footer({ stats }: { stats?: { models: number; albums: number; photos: number } }) {
-  return <footer className="site-footer"><Link className="footer-brand" href="/"><span className="brand-mark" />XGallery</Link>
-    <span>{stats ? `${stats.models} 位模特 · ${stats.albums} 个图集 · ${stats.photos.toLocaleString("zh-CN")} 张照片` : "收藏光影，慢慢欣赏。"}</span><span className="footer-note">A quiet place for photographs.</span>
-  </footer>;
 }
 
 export function BackToTop() {

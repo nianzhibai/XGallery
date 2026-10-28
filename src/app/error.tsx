@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { NavigationLink as Link } from "@/components/navigation-link";
 import { Button } from "@/components/ui/button";
 
 export default function ErrorPage({ reset }: { error: Error & { digest?: string }; reset: () => void }) {

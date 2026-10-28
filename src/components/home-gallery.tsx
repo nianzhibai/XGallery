@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import Link from "next/link";
+import { NavigationLink as Link } from "./navigation-link";
 import { ArrowRight, RotateCw } from "lucide-react";
 import { motion } from "motion/react";
 import type { Album } from "@/lib/types";
