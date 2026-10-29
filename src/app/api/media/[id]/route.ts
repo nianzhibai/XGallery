@@ -24,7 +24,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     const version = `${id}-${Math.trunc(fileStat.mtimeMs)}-${fileStat.size}-original`;
     const headers = new Headers({
       "ETag": `"${version}"`,
-      "Cache-Control": "private, max-age=3600, must-revalidate",
+      "Cache-Control": "public, max-age=3600, must-revalidate",
       "X-Content-Type-Options": "nosniff",
     });
     if (request.headers.get("if-none-match") === headers.get("ETag")) return new Response(null, { status: 304, headers });

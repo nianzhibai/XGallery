@@ -48,12 +48,14 @@ test("索引支持中文、嵌套目录、自然排序和 EXIF 方向，并安�
       const response = await GET(new Request(`${url}${query}`), context);
       assert.equal(response.status, 200);
       assert.equal(response.headers.get("content-type"), "image/jpeg");
+      assert.equal(response.headers.get("cache-control"), "public, max-age=3600, must-revalidate");
       assert.equal(response.headers.get("content-length"), String(bytes.length));
       assert.deepEqual(Buffer.from(await response.arrayBuffer()), bytes, "显示的图片与磁盘原文件逐字节一致");
       etag = response.headers.get("etag")!;
     }
     const cached = await GET(new Request(url, { headers: { "If-None-Match": etag } }), context);
     assert.equal(cached.status, 304);
+    assert.equal(cached.headers.get("cache-control"), "public, max-age=3600, must-revalidate");
     const download = await GET(new Request(`${url}?download=1`), context);
     assert.match(download.headers.get("content-disposition")!, /^attachment;/);
     assert.deepEqual(Buffer.from(await download.arrayBuffer()), bytes);
