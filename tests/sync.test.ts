@@ -33,7 +33,7 @@ test("索引支持中文、嵌套目录、自然排序和 EXIF 方向，并安�
   assert.equal(randomResponse.status, 307);
   assert.equal(randomResponse.headers.get("location"), `/album/${album.id}`, "随机图集使用站内相对地址");
   assert.equal(randomResponse.headers.get("cache-control"), "no-store");
-  assert.equal(album.title, "晨光");
+  assert.equal(album.title, "晨光 [2P]");
   const photos = getPhotos(album.id);
   assert.deepEqual(photos.map((photo) => photo.filename), ["02.jpg", "10.jpg"]);
   assert.deepEqual([photos[1].width, photos[1].height], [90, 60]);
@@ -64,8 +64,10 @@ test("索引支持中文、嵌套目录、自然排序和 EXIF 方向，并安�
   });
   assert.equal(setLike(album.id, "test-visitor", true), 1);
   assert.equal(setLike(album.id, "test-visitor", true), 1, "重复请求不重复计数");
+  getDatabase().sqlite.prepare("UPDATE albums SET title = ? WHERE id = ?").run("晨光", album.id);
   await syncAlbums();
   assert.equal(getAlbums()[0].id, album.id);
+  assert.equal(getAlbums()[0].title, "晨光 [2P]", "重新索引恢复完整目录名");
   assert.equal(getAlbums()[0].likes, 1, "重新索引保留点赞");
 
   const updatedTime = new Date(Date.now() + 10_000);

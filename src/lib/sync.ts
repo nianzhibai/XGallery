@@ -76,7 +76,7 @@ export async function syncAlbums(onProgress: (message: string) => void = () => {
       }
       if (!items.length) continue;
       photoRows.push(...items);
-      albumRows.push({ id: albumId, modelId, title: album.name.replace(/\s*\[[^\]]*\]\s*$/u, "").trim(),
+      albumRows.push({ id: albumId, modelId, title: album.name,
         relativePath, coverId: items[0].id, photoCount: items.length,
         totalBytes: items.reduce((total, item) => total + item.bytes, 0),
         updatedAt: Math.max(...items.map((item) => item.modifiedAt)), seenAt });
