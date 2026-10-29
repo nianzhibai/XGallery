@@ -483,18 +483,3 @@ html.theme-transition::view-transition-old(root), html.theme-transition::view-tr
   *, *::before, *::after { animation-duration: .01ms !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
   html { scroll-behavior: auto; }
 }
-
-.verification-page { min-height: 100dvh; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 48px; padding: 40px var(--gutter); }
-.verification-theme { position: fixed; z-index: 100; top: clamp(16px, 3vw, 28px); right: clamp(16px, 4vw, 28px); }
-.verification-brand { align-items: baseline; animation: verification-enter .8s var(--ease) both; }
-.verification-brand .brand-mark { align-self: center; animation: verification-breathe 3.2s ease-in-out infinite; }
-.verification-brand .brand-title { margin: 0; font-size: clamp(22px, 2.5vw, 28px); letter-spacing: .08em; }
-.verification-card { width: 100%; max-width: 380px; display: flex; flex-direction: column; align-items: center; gap: 20px; padding: 36px 40px; border: 1px solid var(--line); border-radius: 4px; background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 3%, transparent), transparent), var(--bg-2); animation: verification-enter .8s var(--ease) .12s both; }
-.verification-hint { margin: 0; color: var(--ink-3); font-size: 12px; letter-spacing: .04em; text-align: center; }
-.verification-widget { width: 100%; min-height: 65px; display: flex; justify-content: center; }
-.verification-error { margin: 0; color: var(--accent-ink); text-align: center; font-size: 12px; }
-.verification-retry { margin-top: 0; }
-@keyframes verification-enter { from { opacity: 0; transform: translateY(10px); } }
-@keyframes verification-breathe { 50% { box-shadow: 0 0 0 7px color-mix(in srgb, var(--accent) 6%, transparent), 0 0 18px color-mix(in srgb, var(--accent) 35%, transparent); } }
-@media (max-width: 420px) { .verification-card { padding-inline: clamp(8px, calc((100vw - 340px) / 2), 40px); } }
-@media (prefers-reduced-motion: reduce) { .verification-brand, .verification-brand .brand-mark, .verification-card { animation: none; } }
