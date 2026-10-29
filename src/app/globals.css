@@ -46,8 +46,8 @@
 }
 
 * { box-sizing: border-box; }
-html { background: var(--bg); scroll-behavior: smooth; scrollbar-gutter: stable; }
-html:has(.pswp--open) { overflow: hidden; scrollbar-gutter: auto; }
+html { background: var(--bg); scroll-behavior: smooth; }
+html:has(.pswp--open) { overflow: hidden; }
 body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-cn); font-size: 15px; line-height: 1.55; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; transition: background-color .35s, color .35s; }
 button, input, select { font: inherit; color: inherit; }
 button, a, input { -webkit-tap-highlight-color: transparent; }
