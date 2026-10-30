@@ -7,7 +7,9 @@ export const TooltipProvider = TooltipPrimitive.Provider;
 
 export function Tooltip({ children, label, side = "bottom" }: { children: ReactElement; label: string; side?: "top" | "right" | "bottom" | "left" }) {
   return <TooltipPrimitive.Root>
-    <TooltipPrimitive.Trigger asChild>{children}</TooltipPrimitive.Trigger>
+    <TooltipPrimitive.Trigger asChild onFocus={(event) => {
+      if (!event.currentTarget.matches(":focus-visible")) event.preventDefault();
+    }}>{children}</TooltipPrimitive.Trigger>
     <TooltipPrimitive.Portal>
       <TooltipPrimitive.Content className="tooltip" side={side} sideOffset={8} collisionPadding={12}>
         {label}

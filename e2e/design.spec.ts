@@ -1,5 +1,22 @@
 import { test, expect } from "@playwright/test";
 
+test("鼠标切换主题后恢复焦点不显示提示，键盘聚焦仍显示提示", async ({ page }) => {
+  await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" });
+  await page.goto("/");
+  const toggle = page.locator(".theme-toggle");
+  await toggle.click();
+  await expect(toggle).toBeFocused();
+  await toggle.evaluate((button) => button.dispatchEvent(new FocusEvent("focusin", { bubbles: true })));
+  await expect(page.locator(".tooltip")).toHaveCount(0);
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Shift+Tab");
+  await expect(page.locator(".tooltip")).toHaveText("切换到亮色模式");
+  await page.keyboard.press("Escape");
+  await page.mouse.move(0, 0);
+  await toggle.hover();
+  await expect(page.locator(".tooltip")).toHaveText("切换到亮色模式");
+});
+
 test("页眉随滚动收起和出现，搜索获得焦点后保持可见", async ({ page }) => {
   await page.goto("/");
   const header = page.locator(".site-bar");
