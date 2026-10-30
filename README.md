@@ -8,7 +8,7 @@ XGallery 是一个简约优雅的多模特图集网站，专注于提供丝滑�
 
 页面仿照 [栖光集](https://xrw-album.christin3.com/)
 
-## 图集目录结构要求
+## 图集目录要求
 
 ```text
 Albums/                       # ALBUMS_DIR
@@ -24,11 +24,3 @@ Albums/                       # ALBUMS_DIR
     ├── 01.jpg
     └── 02.jpg
 ```
-
-## 环境配置
-
-`.env.example` 中的配置字段：
-
-- `ALBUMS_DIR`：图集根目录（必填）
-- `INCLUDE_ANIMATED_IMAGES`：是否读取动图，默认为 `true`
-- `DATABASE_PATH`：SQLite 数据库文件路径，默认为 `./data/xgallery.db`
