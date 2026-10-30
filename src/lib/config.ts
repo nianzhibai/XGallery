@@ -7,3 +7,12 @@ export const albumsDirectory = () => {
   return path.resolve(/* turbopackIgnore: true */ directory);
 };
 export const databasePath = () => path.resolve(/* turbopackIgnore: true */ process.env.DATABASE_PATH || "./data/xgallery.db");
+
+export function imageCacheControl(name: "ORIGINAL_CACHE_TTL" | "PREVIEW_CACHE_TTL") {
+  const configured = process.env[name];
+  const seconds = configured === undefined ? 604800 : Number(configured);
+  if ((configured !== undefined && !/^\d+$/.test(configured)) || !Number.isSafeInteger(seconds)) {
+    throw new Error(`${name} 必须是非负整数秒数`);
+  }
+  return `public, max-age=${seconds}, must-revalidate`;
+}

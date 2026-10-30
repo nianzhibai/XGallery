@@ -41,7 +41,7 @@ test("真实图集的浏览、灯箱、收藏、历史、点赞和搜索", async
   await page.getByRole("link", { name: "查看第 1 张图片", exact: true }).click();
   await expect(page.locator(".pswp")).toBeVisible();
   await expect(page.locator(".pswp__counter")).toHaveText(`1 / ${count}`);
-  await expect(page.getByRole("link", { name: "下载原图" })).toHaveAttribute("href", /original=1&download=1/);
+  await expect(page.getByRole("link", { name: "下载原图" })).toHaveAttribute("href", /original=1&v=\d+-\d+&download=1/);
   await expect(page.locator(".pswp")).toBeFocused();
   await page.keyboard.press("ArrowRight");
   await expect(page.locator(".pswp__counter")).toHaveText(`2 / ${count}`);
@@ -93,9 +93,9 @@ test("大图仅显示原图，底部缩略条使用缓存小图", async ({ page 
     await expect.poll(() => thumbnail.evaluate((element) => (element as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
     await expect(page.locator("img.pswp__img--placeholder")).toHaveCount(0);
     const original = page.locator(".pswp__item[aria-hidden='false'] img.pswp__img:not(.pswp__img--placeholder)");
-    await expect(original).toHaveAttribute("src", /\?original=1$/);
+    await expect(original).toHaveAttribute("src", /\?original=1&v=\d+-\d+$/);
     expect(await original.evaluate((element) => (element as HTMLImageElement).naturalWidth)).toBe(0);
-    await expect(page.getByRole("link", { name: "下载原图" })).toHaveAttribute("href", /original=1&download=1/);
+    await expect(page.getByRole("link", { name: "下载原图" })).toHaveAttribute("href", /original=1&v=\d+-\d+&download=1/);
 
     releaseImages();
     await expect.poll(() => original.evaluate((element) => (element as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
@@ -137,14 +137,28 @@ test("首页使用响应式缩略图，原文件下载与条件缓存保持可�
   const source = new URL(optimized.searchParams.get("url")!, page.url());
   expect(source.pathname).toMatch(/^\/api\/media\/[a-f0-9]{24}\/preview\/\d+-\d+$/);
   const originalPath = source.pathname.replace(/\/preview\/[^/]+$/, "");
+  const preview = await request.get(source.toString());
+  expect(preview.status()).toBe(200);
+  expect(preview.headers()["cache-control"]).toContain("max-age=604800");
   const thumbnail = await request.get(src, { headers: { Accept: "image/webp" } });
   expect(thumbnail.status()).toBe(200);
   expect(thumbnail.headers()["content-type"]).toMatch(/^image\//);
-  const originalUrl = `${originalPath}?original=1`;
+  const smallOptimized = new URL(src);
+  smallOptimized.searchParams.set("w", "32");
+  const smallThumbnail = await request.get(smallOptimized.toString(), { headers: { Accept: "image/webp" } });
+  expect(smallThumbnail.status()).toBe(200);
+  if (smallThumbnail.headers()["cache-control"].includes("max-age=3600")) {
+    expect(smallThumbnail.headers()["x-nextjs-cache"]).toBe("HIT");
+  } else {
+    expect(smallThumbnail.headers()["cache-control"]).toContain("max-age=604800");
+  }
+  const version = source.pathname.split("/").at(-1);
+  const originalUrl = `${originalPath}?original=1&v=${version}`;
   const display = await request.get(originalUrl);
   expect(display.status()).toBe(200);
+  expect(display.headers()["cache-control"]).toContain("max-age=604800");
   expect(display.headers()["content-type"]).toMatch(/^image\//);
-  const original = await request.get(`${originalPath}?original=1&download=1`);
+  const original = await request.get(`${originalUrl}&download=1`);
   expect(original.status()).toBe(200);
   expect(original.headers()["content-disposition"]).toMatch(/^attachment;/);
   expect(original.headers()["content-type"]).toMatch(/^image\//);
@@ -153,6 +167,9 @@ test("首页使用响应式缩略图，原文件下载与条件缓存保持可�
   expect(sources.every((source) => source?.startsWith("/_next/image?"))).toBe(true);
   const cached = await request.get(originalUrl, { headers: { "If-None-Match": display.headers().etag } });
   expect(cached.status()).toBe(304);
+  const missingVersion = await request.get(`${originalPath}?original=1`);
+  expect(missingVersion.status()).toBe(404);
+  expect(missingVersion.headers()["cache-control"]).toBe("no-store");
   const unknown = await request.get("/api/media/not-an-id");
   expect(unknown.status()).toBe(404);
   await page.locator(".album-cover").first().click();

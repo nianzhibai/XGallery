@@ -13,6 +13,7 @@ const { syncAlbums } = await import("../src/lib/sync");
 const { getAlbums, getPhotos, setLike } = await import("../src/lib/catalog");
 const { getDatabase } = await import("../src/lib/db");
 const { resolveMediaPath } = await import("../src/lib/media");
+const { imageUrl } = await import("../src/lib/utils");
 
 after(async () => { getDatabase().sqlite.close(); await rm(temporary, { recursive: true, force: true }); });
 
@@ -44,25 +45,65 @@ test("索引支持中文、嵌套目录、自然排序和 EXIF 方向，并安�
     const url = `http://localhost/api/media/${photos[1].id}`;
     const context = { params: Promise.resolve({ id: photos[1].id }) };
     let etag = "";
-    for (const query of ["", "?original=1", "?w=320"]) {
+    for (const query of [`?v=${photos[1].version}`, `?original=1&v=${photos[1].version}`, `?w=320&v=${photos[1].version}`]) {
       const response = await GET(new Request(`${url}${query}`), context);
       assert.equal(response.status, 200);
       assert.equal(response.headers.get("content-type"), "image/jpeg");
-      assert.equal(response.headers.get("cache-control"), "public, max-age=3600, must-revalidate");
+      assert.equal(response.headers.get("cache-control"), "public, max-age=604800, must-revalidate");
       assert.equal(response.headers.get("content-length"), String(bytes.length));
       assert.deepEqual(Buffer.from(await response.arrayBuffer()), bytes, "显示的图片与磁盘原文件逐字节一致");
       etag = response.headers.get("etag")!;
     }
-    const cached = await GET(new Request(url, { headers: { "If-None-Match": etag } }), context);
+    for (const query of ["", "?original=1", "?download=1", "?v=", "?v=invalid"]) {
+      const response = await GET(new Request(`${url}${query}`), context);
+      assert.equal(response.status, 404);
+      assert.equal(response.headers.get("cache-control"), "no-store");
+    }
+    const cached = await GET(new Request(`${url}?v=${photos[1].version}`, { headers: { "If-None-Match": etag } }), context);
     assert.equal(cached.status, 304);
-    assert.equal(cached.headers.get("cache-control"), "public, max-age=3600, must-revalidate");
-    const download = await GET(new Request(`${url}?download=1`), context);
+    assert.equal(cached.headers.get("cache-control"), "public, max-age=604800, must-revalidate");
+    const versionedUrl = `http://localhost${imageUrl(photos[1].id, photos[1].version)}`;
+    const versioned = await GET(new Request(versionedUrl), context);
+    assert.equal(versioned.status, 200);
+    assert.deepEqual(Buffer.from(await versioned.arrayBuffer()), bytes);
+    const download = await GET(new Request(`http://localhost${imageUrl(photos[1].id, photos[1].version, true)}`), context);
     assert.match(download.headers.get("content-disposition")!, /^attachment;/);
     assert.deepEqual(Buffer.from(await download.arrayBuffer()), bytes);
     const preview = await getPreview(new Request(url), { params: Promise.resolve({ id: photos[1].id, version: photos[1].version }) });
     assert.equal(preview.status, 200);
+    assert.equal(preview.headers.get("cache-control"), "public, max-age=604800, must-revalidate");
+    assert.deepEqual(Buffer.from(await preview.arrayBuffer()), bytes);
+    const previewCached = await getPreview(new Request(url, { headers: { "If-None-Match": etag } }), { params: Promise.resolve({ id: photos[1].id, version: photos[1].version }) });
+    assert.equal(previewCached.status, 304);
+    assert.equal(previewCached.headers.get("cache-control"), "public, max-age=604800, must-revalidate");
     const invalidVersion = await getPreview(new Request(url), { params: Promise.resolve({ id: photos[1].id, version: "invalid" }) });
     assert.equal(invalidVersion.status, 404);
+    assert.equal(invalidVersion.headers.get("cache-control"), "no-store");
+  });
+  await t.test("原图和预览图独立使用运行时缓存配置", async () => {
+    const { GET } = await import("../src/app/api/media/[id]/route");
+    const { GET: getPreview } = await import("../src/app/api/media/[id]/preview/[version]/route");
+    const previousOriginal = process.env.ORIGINAL_CACHE_TTL;
+    const previousPreview = process.env.PREVIEW_CACHE_TTL;
+    try {
+      process.env.ORIGINAL_CACHE_TTL = "120";
+      process.env.PREVIEW_CACHE_TTL = "600";
+      const url = `http://localhost${imageUrl(photos[1].id, photos[1].version)}`;
+      const response = await GET(new Request(url), { params: Promise.resolve({ id: photos[1].id }) });
+      assert.equal(response.headers.get("cache-control"), "public, max-age=120, must-revalidate");
+      await response.arrayBuffer();
+      const preview = await getPreview(new Request(url), { params: Promise.resolve({ id: photos[1].id, version: photos[1].version }) });
+      assert.equal(preview.headers.get("cache-control"), "public, max-age=600, must-revalidate");
+      await preview.arrayBuffer();
+      const cached = await getPreview(new Request(url, { headers: { "If-None-Match": preview.headers.get("etag")! } }), { params: Promise.resolve({ id: photos[1].id, version: photos[1].version }) });
+      assert.equal(cached.status, 304);
+      assert.equal(cached.headers.get("cache-control"), "public, max-age=600, must-revalidate");
+    } finally {
+      if (previousOriginal === undefined) delete process.env.ORIGINAL_CACHE_TTL;
+      else process.env.ORIGINAL_CACHE_TTL = previousOriginal;
+      if (previousPreview === undefined) delete process.env.PREVIEW_CACHE_TTL;
+      else process.env.PREVIEW_CACHE_TTL = previousPreview;
+    }
   });
   assert.equal(setLike(album.id, "test-visitor", true), 1);
   assert.equal(setLike(album.id, "test-visitor", true), 1, "重复请求不重复计数");
@@ -73,10 +114,31 @@ test("索引支持中文、嵌套目录、自然排序和 EXIF 方向，并安�
   assert.equal(getAlbums()[0].likes, 1, "重新索引保留点赞");
 
   const updatedTime = new Date(Date.now() + 10_000);
+  const oldBytes = await readFile(path.join(albumPath, "02.jpg"));
+  await sharp({ create: { width: 60, height: 90, channels: 3, background: "#224466" } }).jpeg().toFile(path.join(albumPath, "02.jpg"));
   await utimes(path.join(albumPath, "02.jpg"), updatedTime, updatedTime);
+  const { GET: getOriginal } = await import("../src/app/api/media/[id]/route");
+  const originalContext = { params: Promise.resolve({ id: photos[0].id }) };
+  const oldUrl = `http://localhost${imageUrl(photos[0].id, photos[0].version)}`;
+  const beforeSync = await getOriginal(new Request(oldUrl), originalContext);
+  assert.equal(beforeSync.status, 404, "文件变更后不会将新文件缓存到旧版本地址");
+  assert.equal(beforeSync.headers.get("cache-control"), "no-store");
+  const { GET: getPreview } = await import("../src/app/api/media/[id]/preview/[version]/route");
+  const stalePreview = await getPreview(new Request(oldUrl), { params: Promise.resolve({ id: photos[0].id, version: photos[0].version }) });
+  assert.equal(stalePreview.status, 404, "文件变更后不会将新文件缓存到旧预览地址");
+  assert.equal(stalePreview.headers.get("cache-control"), "no-store");
   await syncAlbums();
   assert.notEqual(getAlbums()[0].coverVersion, album.coverVersion, "封面变更后缩略图缓存地址更新");
-  assert.notEqual(getPhotos(album.id)[0].version, photos[0].version, "照片变更后缩略图缓存地址更新");
+  const updatedPhoto = getPhotos(album.id)[0];
+  assert.notEqual(updatedPhoto.version, photos[0].version, "照片变更后图片缓存地址更新");
+  const stale = await getOriginal(new Request(oldUrl), originalContext);
+  assert.equal(stale.status, 404);
+  assert.equal(stale.headers.get("cache-control"), "no-store");
+  const updated = await getOriginal(new Request(`http://localhost${imageUrl(updatedPhoto.id, updatedPhoto.version)}`), originalContext);
+  assert.equal(updated.status, 200);
+  const updatedBytes = Buffer.from(await updated.arrayBuffer());
+  assert.deepEqual(updatedBytes, await readFile(path.join(albumPath, "02.jpg")));
+  assert.notDeepEqual(updatedBytes, oldBytes);
 
   await rm(path.join(albumPath, "02.jpg"));
   await syncAlbums();

@@ -3,8 +3,8 @@ import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) { return twMerge(clsx(inputs)); }
 
-export function imageUrl(id: string) {
-  return `/api/media/${id}?original=1`;
+export function imageUrl(id: string, version: string, download = false) {
+  return `/api/media/${id}?original=1&v=${encodeURIComponent(version)}${download ? "&download=1" : ""}`;
 }
 
 export function thumbnailUrl(id: string, version: string) {

@@ -25,8 +25,9 @@ Cloudflare 默认主要根据 URL 的文件扩展名判断缓存资格。项目�
 先检查图片的实际缓存情况；如需增加 CDN 缓存，可为 `/_next/image` 和 `/api/media/` 单独创建 **Eligible for cache** 规则。如果启用了访问验证，先确认 WAF 覆盖这些路径且无法绕过源站。不要对整个网站启用 Cache Everything，也不要共享缓存页面、点赞接口或带 `Set-Cookie` 的响应。
 
 - 对 `/_next/image` 启用 Cache Rule 的 Vary 设置：`accept` 设为 `passthrough`，未明确处理的 Vary 字段设为 `bypass`。代理须转发 `Accept`，以区分不同图片格式。
-- 缓存键保留完整查询字符串，包括优化图片的 `url`、`w`、`q` 和原图的 `original`、`download`。
-- 原图 URL 不含版本，更新后可能在缓存有效期内仍显示旧图。清除 Cloudflare 缓存不会清除浏览器缓存。
+- 缓存键保留完整查询字符串，包括优化图片的 `url`、`w`、`q` 和原图的 `original`、`v`、`download`。
+- 缩略图、原图和下载 URL 使用图库同步生成的版本；替换图片后需重新同步图库并刷新页面，才能请求新版本。旧地址的缓存仍可能在有效期内可用，清除 Cloudflare 缓存不会清除浏览器缓存。
+- 图片缓存时间通过项目环境变量设置，默认 7 天；修改后需重启应用。
 
 ## 部署后检查
 

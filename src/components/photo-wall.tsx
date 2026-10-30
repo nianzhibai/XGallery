@@ -25,7 +25,7 @@ export function PhotoWall({ photos, title, onLike }: { photos: Photo[]; title: s
   useEffect(() => {
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const source = photos.map((photo) => ({
-      src: imageUrl(photo.id),
+      src: imageUrl(photo.id, photo.version),
       width: photo.width, height: photo.height, alt: `${title} · ${photo.filename}`,
     }));
     const instance = new PhotoSwipeLightbox({
@@ -73,7 +73,10 @@ export function PhotoWall({ photos, title, onLike }: { photos: Photo[]; title: s
         html: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3v12m-4-4 4 4 4-4M5 18v3h14v-3"/></svg>',
         onInit: (element) => {
           element.setAttribute("download", "");
-          pswp.on("change", () => element.setAttribute("href", `/api/media/${photos[pswp.currIndex].id}?original=1&download=1`));
+          pswp.on("change", () => {
+            const photo = photos[pswp.currIndex];
+            element.setAttribute("href", imageUrl(photo.id, photo.version, true));
+          });
         },
       });
       pswp.ui?.registerElement({
@@ -117,7 +120,7 @@ export function PhotoWall({ photos, title, onLike }: { photos: Photo[]; title: s
     const sizes = typeof style?.width === "number" ? `${Math.ceil(style.width)}px` : "(max-width: 680px) 33vw, 17vw";
     const { props: thumbnail } = getImageProps({ src: thumbnailUrl(photo.id, photo.version), width: photo.width, height: photo.height,
       alt: `${title} · 第 ${index + 1} 张`, sizes, loading: index < 12 ? "eager" : "lazy", fetchPriority: "low" });
-    return <a key={photo.id} className="photo-tile" href={imageUrl(photo.id)}
+    return <a key={photo.id} className="photo-tile" href={imageUrl(photo.id, photo.version)}
     aria-label={`查看第 ${index + 1} 张图片`} style={style} onClick={(event) => { if (lightbox.current) { event.preventDefault(); lightbox.current.loadAndOpen(index); } }}>
     {/* eslint-disable-next-line @next/next/no-img-element */}
     <img {...thumbnail} />
