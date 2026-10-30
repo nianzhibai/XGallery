@@ -10,7 +10,7 @@ XGallery 使用 Cloudflare + 橙云代理访问说明
 
 开启橙云后即可通过域名访问网站。Cloudflare 验证和图片缓存规则按需配置；仅开启橙云不会要求每位访客先完成验证。
 
-## 访问验证（可选）
+## 访问验证（建议配置）
 
 在 Cloudflare **Security → Security rules** 创建 Custom rule，匹配图库的精确域名，动作选择 **Managed Challenge**。规则需覆盖页面、图片和 API，不要只保护首页。Cloudflare 会根据请求展示自己的验证页，验证可能自动完成，也可能要求访客交互。
 
@@ -18,7 +18,7 @@ XGallery 使用 Cloudflare + 橙云代理访问说明
 
 如需防止绕过 Cloudflare 验证，应限制公网直接访问源站和 Next.js 端口，同时保留必要的管理访问。此验证用于减少自动化访问，不是账号认证。
 
-## 图片缓存（可选）
+## 图片缓存（建议配置）
 
 Cloudflare 默认主要根据 URL 的文件扩展名判断缓存资格。项目的 `/_next/image` 和 `/api/media/` 地址没有图片扩展名，仅开启橙云时可能不会被 CDN 缓存，即使响应允许缓存；浏览器和 Next.js 自身仍可缓存。可在浏览器网络面板查看图片请求的 `CF-Cache-Status`：`DYNAMIC` 通常表示未进入 CDN 缓存，`HIT` 表示命中。
 
