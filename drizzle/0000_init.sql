@@ -28,15 +28,6 @@ CREATE TABLE IF NOT EXISTS photos (
   seen_at INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS photos_album_idx ON photos(album_id, position);
-CREATE TABLE IF NOT EXISTS image_metadata_cache (
-  id TEXT PRIMARY KEY NOT NULL,
-  bytes INTEGER NOT NULL,
-  modified_at INTEGER NOT NULL,
-  width INTEGER NOT NULL,
-  height INTEGER NOT NULL,
-  animated INTEGER NOT NULL,
-  seen_at INTEGER NOT NULL
-);
 CREATE TABLE IF NOT EXISTS likes (
   album_id TEXT NOT NULL REFERENCES albums(id) ON DELETE CASCADE,
   visitor_id TEXT NOT NULL,

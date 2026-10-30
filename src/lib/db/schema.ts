@@ -31,16 +31,6 @@ export const photos = sqliteTable("photos", {
   seenAt: integer("seen_at").notNull(),
 }, (table) => [index("photos_album_idx").on(table.albumId, table.position)]);
 
-export const imageMetadataCache = sqliteTable("image_metadata_cache", {
-  id: text("id").primaryKey(),
-  bytes: integer("bytes").notNull(),
-  modifiedAt: integer("modified_at").notNull(),
-  width: integer("width").notNull(),
-  height: integer("height").notNull(),
-  animated: integer("animated").notNull(),
-  seenAt: integer("seen_at").notNull(),
-});
-
 export const likes = sqliteTable("likes", {
   albumId: text("album_id").notNull().references(() => albums.id, { onDelete: "cascade" }),
   visitorId: text("visitor_id").notNull(),

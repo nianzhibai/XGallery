@@ -7,4 +7,3 @@ export const albumsDirectory = () => {
   return path.resolve(/* turbopackIgnore: true */ directory);
 };
 export const databasePath = () => path.resolve(/* turbopackIgnore: true */ process.env.DATABASE_PATH || "./data/xgallery.db");
-export const includeAnimatedImages = () => process.env.INCLUDE_ANIMATED_IMAGES !== "false";
