@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type MouseEvent } from "react";
 import { flushSync } from "react-dom";
 import { Tooltip } from "./ui/tooltip";
 import { Moon, Sun } from "lucide-react";
+import { themeColors } from "@/lib/theme";
 
 export function ThemeToggle() {
   const [dark, setDark] = useState(false);
@@ -16,6 +17,7 @@ export function ThemeToggle() {
     const apply = () => {
       setDark(next);
       root.dataset.theme = next ? "dark" : "light";
+      document.querySelector('meta[name="theme-color"]')?.setAttribute("content", themeColors[next ? "dark" : "light"]);
       try { localStorage.setItem("xgallery-theme", next ? "dark" : "light"); } catch { /* Theme remains usable without storage. */ }
     };
     if (!document.startViewTransition || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {

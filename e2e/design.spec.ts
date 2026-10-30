@@ -85,6 +85,20 @@ for (const mode of ["native", "fallback", "reduced"] as const) {
   });
 }
 
+for (const [system, saved, color] of [["light", "dark", "#0d0c0b"], ["dark", "light", "#ece5d8"]] as const) {
+  test(`状态栏颜色跟随已保存的网站主题（系统 ${system}）`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme: system, reducedMotion: "reduce" });
+    await page.addInitScript((theme) => localStorage.setItem("xgallery-theme", theme), saved);
+    await page.goto("/");
+    const themeColor = page.locator('meta[name="theme-color"]');
+    await expect(themeColor).toHaveCount(1);
+    await expect(page.locator("html")).toHaveAttribute("data-theme", saved);
+    await expect(themeColor).toHaveAttribute("content", color);
+    await page.getByRole("button", { name: saved === "dark" ? "切换到亮色模式" : "切换到暗色模式" }).click();
+    await expect(themeColor).toHaveAttribute("content", saved === "dark" ? "#ece5d8" : "#0d0c0b");
+  });
+}
+
 test("收藏不推挤相邻按钮，大图双击点赞后正常返回", async ({ page }) => {
   await page.goto("/");
   await page.locator(".album-cover").first().click();

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Providers } from "@/components/providers";
 import { BackToTop } from "@/components/page-parts";
 import { NavigationProgressProvider } from "@/components/navigation-progress";
+import { themeColors } from "@/lib/theme";
 import "photoswipe/style.css";
 import "./globals.css";
 
@@ -10,9 +11,9 @@ export const metadata: Metadata = {
   description: "一个简约、精致的私人影像画廊。发现图集，收藏光影，沉浸欣赏。",
   robots: { index: false, follow: false },
 };
-export const viewport: Viewport = { width: "device-width", initialScale: 1, colorScheme: "light dark", themeColor: [{ media: "(prefers-color-scheme: light)", color: "#ece5d8" }, { media: "(prefers-color-scheme: dark)", color: "#0d0c0b" }] };
+export const viewport: Viewport = { width: "device-width", initialScale: 1, colorScheme: "light dark" };
 
-const themeScript = `(function(){try{var t=localStorage.getItem('xgallery-theme');if(t!=='light'&&t!=='dark')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.dataset.theme=t}catch(e){}})()`;
+const themeScript = `(function(){var t;try{t=localStorage.getItem('xgallery-theme')}catch(e){}if(t!=='light'&&t!=='dark')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.dataset.theme=t;var m=document.createElement('meta');m.name='theme-color';m.content=${JSON.stringify(themeColors)}[t];document.head.appendChild(m)})()`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return <html lang="zh-CN" data-scroll-behavior="smooth" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head><body><a className="skip-link" href="#main-content">跳转到主要内容</a><NavigationProgressProvider><Providers>{children}<BackToTop /></Providers></NavigationProgressProvider></body></html>;
