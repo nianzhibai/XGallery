@@ -1,4 +1,4 @@
-import { getModels } from "@/lib/catalog";
+import { getModelLikeCounts, getModels } from "@/lib/catalog";
 import { SiteHeader } from "@/components/site-header";
 import { ModelsList } from "@/components/models-list";
 
@@ -6,5 +6,7 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "模特" };
 export default function ModelsPage() {
   const models = getModels();
-  return <><SiteHeader models={models} /><main id="main-content" className="page-container page-enter"><ModelsList models={models} /></main></>;
+  const likeCounts = getModelLikeCounts();
+  const modelsWithLikes = models.map((model) => ({ ...model, likeCount: likeCounts.get(model.id) ?? 0 }));
+  return <><SiteHeader models={models} /><main id="main-content" className="page-container page-enter"><ModelsList models={modelsWithLikes} /></main></>;
 }

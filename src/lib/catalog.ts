@@ -24,6 +24,14 @@ export function getModels(): Model[] {
     .groupBy(models.id).orderBy(asc(models.name)).all();
 }
 
+export function getModelLikeCounts(): Map<string, number> {
+  const counts = getDatabase().db.select({
+    modelId: albums.modelId,
+    count: sql<number>`count(*)`,
+  }).from(likes).innerJoin(albums, eq(likes.albumId, albums.id)).groupBy(albums.modelId).all();
+  return new Map(counts.map(({ modelId, count }) => [modelId, count]));
+}
+
 export function getAlbum(id: string) {
   return getAlbums().find((album) => album.id === id);
 }
