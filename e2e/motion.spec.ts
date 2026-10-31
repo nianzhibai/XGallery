@@ -126,9 +126,14 @@ test("从图集返回时恢复滚动位置并显示页眉", async ({ page }) => 
     await page.goto("/");
     const card = page.getByRole("region", { name: "随机漫游" }).locator(".album-cover").last();
     await card.scrollIntoViewIfNeeded();
-    const previousY = await page.evaluate(() => window.scrollY);
-    expect(previousY).toBeGreaterThan(500);
+    await card.evaluate((element) => {
+      element.addEventListener("click", () => {
+        (window as unknown as { departureScrollY: number }).departureScrollY = window.scrollY;
+      }, { capture: true, once: true });
+    });
     await card.click();
+    const previousY = await page.evaluate(() => (window as unknown as { departureScrollY: number }).departureScrollY);
+    expect(previousY).toBeGreaterThan(500);
     await expect(page.locator(".album-title")).toBeVisible();
     if (method === "button") await page.getByRole("button", { name: "返回", exact: true }).click();
     else await page.goBack();
