@@ -17,6 +17,8 @@ not starts_with(http.request.uri.path, "/api/v1/")
 
 Challenge Passage 建议设为 2 小时；此设置可能影响同一域名区域中的其他站点。验证过期后，如果图片或点赞请求失败，刷新页面可重新验证。
 
+Cloudflare 的 Browser Integrity Check 也可能拦截 Python 等 API 客户端。可通过 Configuration Rule 仅对图库域名的 `/api/v1/` 路径关闭该检查；API 仍由密钥验证保护。
+
 ## 图片缓存（建议配置）
 
 建议为 `/_next/image` 和 `/api/media/` 创建 **Eligible for cache** 规则，并确保验证覆盖这些路径。对 `/_next/image` 的 Vary 设置中将 `accept` 设为 `passthrough`，未明确处理的字段设为 `bypass`；缓存键保留完整查询字符串。
