@@ -67,6 +67,10 @@ npm start
 
 [Cloudflare 配置说明](docs/cloudflare.md)
 
+## API 调用
+
+支持使用 API key 调用接口（默认关闭），详情见 [API 调用文档](docs/api.md)
+
 ## 使用须知
 
 请遵守法律法规
