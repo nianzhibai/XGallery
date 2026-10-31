@@ -52,11 +52,11 @@ function RefreshableSection({ section, title, headingId, pool, initialAlbums, co
   </section>;
 }
 
-export function HomeGallery({ albums, initialRandom }: { albums: Album[]; initialRandom: Album[] }) {
+export function HomeGallery({ albums, recentPool, initialRecent, initialRandom }: { albums: Album[]; recentPool: Album[]; initialRecent: Album[]; initialRandom: Album[] }) {
   const { library } = useLibrary();
   const viewed = library.recent.map((id) => albums.find((album) => album.id === id)).filter((album): album is Album => !!album).slice(0, 8);
   return <>
-    <RefreshableSection section="recent" title="最近更新" headingId="recent-heading" pool={albums.slice(0, Math.max(24, Math.ceil(albums.length / 2)))} initialAlbums={albums.slice(0, 8)} count={8} first />
+    <RefreshableSection section="recent" title="最近更新" headingId="recent-heading" pool={recentPool} initialAlbums={initialRecent} count={8} first />
     <RefreshableSection section="random" title="随机漫游" headingId="random-heading" pool={albums} initialAlbums={initialRandom} count={16} />
     {viewed.length > 0 && <section className="home-section" aria-labelledby="viewed-heading"><div className="section-head"><h2 id="viewed-heading" className="section-title">最近看过</h2><Button asChild><Link href="/library?tab=recent">全部<ArrowRight size={13} /></Link></Button></div><AlbumGrid albums={viewed} overlay /></section>}
   </>;

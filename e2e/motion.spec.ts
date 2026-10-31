@@ -65,6 +65,18 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
   });
 }
 
+test("刷新首页时最近更新重新选取图集", async ({ page }) => {
+  await page.goto("/");
+  const covers = page.getByRole("region", { name: "最近更新" }).locator(".album-cover");
+  const batches = new Set<string>();
+  for (let i = 0; i < 3; i++) {
+    await expect(covers).toHaveCount(8);
+    batches.add(JSON.stringify(await covers.evaluateAll((elements) => elements.map((element) => element.getAttribute("href")).sort())));
+    if (i < 2) await page.reload();
+  }
+  expect(batches.size).toBeGreaterThan(1);
+});
+
 test("进入图集后返回首页，保留两个分区换批后的内容", async ({ page }) => {
   await page.goto("/");
   const recent = page.getByRole("region", { name: "最近更新" });
