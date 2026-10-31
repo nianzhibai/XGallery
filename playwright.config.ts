@@ -1,6 +1,6 @@
 import { defineConfig } from "@playwright/test";
 
-const baseURL = process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:3005";
+const baseURL = "http://127.0.0.1:3005";
 
 export default defineConfig({
   testDir: "./e2e",
@@ -15,9 +15,10 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   webServer: {
-    command: "npm run start -- --port 3005",
+    command: "npx tsx e2e/support/server.ts",
     url: baseURL,
-    reuseExistingServer: !process.env.CI,
-    timeout: 30_000,
+    reuseExistingServer: false,
+    gracefulShutdown: { signal: "SIGTERM", timeout: 5_000 },
+    timeout: 60_000,
   },
 });

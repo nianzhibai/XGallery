@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { testData } from "./support/data";
 
 test("鼠标切换主题后恢复焦点不显示提示，键盘聚焦仍显示提示", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" });
@@ -21,7 +22,7 @@ test("页眉随滚动收起和出现，搜索获得焦点后保持可见", async
   await page.goto("/");
   const header = page.locator(".site-bar");
   const input = page.getByRole("combobox", { name: "搜索相册" });
-  await input.fill("布丁");
+  await input.fill(testData.searchTerm);
   await expect(page.getByRole("listbox")).toBeVisible();
   await page.getByRole("button", { name: "清空搜索" }).click();
   await input.blur();
@@ -64,9 +65,9 @@ test("搜索框在桌面、平板和手机上都不挤出导航", async ({ page 
 test("搜索建议突出匹配文字，支持 Escape 和方向键选择", async ({ page }) => {
   await page.goto("/");
   const input = page.getByRole("combobox", { name: "搜索相册" });
-  await input.fill("布丁");
+  await input.fill(testData.searchTerm);
   const suggestions = page.getByRole("listbox", { name: "匹配模特" });
-  await expect(suggestions.locator("mark").first()).toHaveText("布丁");
+  await expect(suggestions.locator("mark").first()).toHaveText(testData.searchTerm);
   await input.press("Escape");
   await expect(suggestions).toHaveCount(0);
   await expect(input).toBeFocused();
@@ -77,7 +78,7 @@ test("搜索建议突出匹配文字，支持 Escape 和方向键选择", async 
   await expect(page.getByRole("option").first()).toHaveAttribute("aria-selected", "true");
   await input.press("Enter");
   await expect(page).toHaveURL(/\/model\/[a-f0-9]{24}$/);
-  await expect(page.getByRole("heading", { name: "布丁大法", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: testData.searchModel, exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "模特", exact: true })).toHaveClass(/is-active/);
 });
 
@@ -97,7 +98,7 @@ for (const mode of ["native", "fallback", "reduced"] as const) {
     await expect(page.locator("html")).not.toHaveClass(/theme-transition/);
     await page.reload();
     await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
-    await page.getByRole("combobox", { name: "搜索相册" }).fill("布丁");
+    await page.getByRole("combobox", { name: "搜索相册" }).fill(testData.searchTerm);
     await expect(page.getByRole("listbox")).toBeVisible();
   });
 }

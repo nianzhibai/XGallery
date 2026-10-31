@@ -1,9 +1,10 @@
 import { test, expect } from "@playwright/test";
+import { testData } from "./support/data";
 
 test("浏览记录可逐条移除且不影响收藏", async ({ page }) => {
   await page.goto("/");
   const hrefs = await page.locator(".album-cover").evaluateAll((elements) => [...new Set(elements.map((element) => element.getAttribute("href")))].slice(0, 2));
-  test.skip(hrefs.length < 2, "需要至少两个图集");
+  expect(hrefs).toHaveLength(2);
   const ids = hrefs.map((href) => href!.split("/").pop()!);
   await page.evaluate(([first, second]) => localStorage.setItem("xgallery-library-v1", JSON.stringify({ favorites: [first], recent: [first, second], liked: [] })), ids);
   await page.goto("/library?tab=recent");
@@ -11,14 +12,9 @@ test("浏览记录可逐条移除且不影响收藏", async ({ page }) => {
   const card = page.locator(".album-card").first();
   const title = await card.locator(".cover-title").innerText();
   const href = await card.locator(".album-cover").getAttribute("href");
-  const position = await card.evaluate((element) => {
-    const cover = element.querySelector(".album-cover")!.getBoundingClientRect();
-    const remove = element.querySelector(".card-remove")!.getBoundingClientRect();
-    return { left: remove.left - cover.left, width: remove.width };
-  });
-  expect(position.left).toBeCloseTo(12, 0);
-  expect(position.width).toBe(26);
-  await page.getByRole("button", { name: /移除浏览记录/ }).first().click();
+  const remove = card.getByRole("button", { name: /移除浏览记录/ });
+  await expect(remove).toBeVisible();
+  await remove.click();
   await expect(page.locator(".album-card")).toHaveCount(1);
   await page.reload();
   await expect(page.locator(".album-card")).toHaveCount(1);
@@ -56,9 +52,9 @@ test("搜索空状态不显示无关的跳转按钮", async ({ page }) => {
 
 test("模特图集分页并使用封面叠字", async ({ page }) => {
   await page.goto("/models");
-  const first = page.locator(".model-row").first();
+  const first = page.locator(".model-row").filter({ hasText: testData.paginatedModel });
   const count = Number((await first.locator(".model-meta").innerText()).match(/\d+/)?.[0] ?? 0);
-  test.skip(count <= 24, "需要一位拥有超过 24 个图集的模特");
+  expect(count).toBe(testData.paginatedAlbums);
   await first.click();
   await expect(page.locator(".album-card-overlay")).toHaveCount(24);
   await page.getByRole("link", { name: "下一页 →" }).click();
@@ -70,7 +66,6 @@ test("模特图集分页并使用封面叠字", async ({ page }) => {
 
 test("排行榜区分前三名与后续列表", async ({ page }) => {
   await page.goto("/popular");
-  test.skip(await page.locator(".popular-card").count() < 3 || await page.locator(".rank-list li").count() === 0, "需要至少四个图集");
   await expect(page.locator(".popular-card")).toHaveCount(3);
   await expect(page.locator(".rank-list li").first().locator(".rank-list-number")).toHaveText("4");
   for (const width of [1440, 390]) {

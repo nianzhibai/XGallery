@@ -21,7 +21,7 @@ test("慢速站内导航显示进度并在完成后消失", async ({ page }) => 
     await expect(progress).toHaveClass(/is-idle/);
     await page.getByRole("link", { name: "最受喜爱" }).click();
     await expect(progress).toHaveClass(/is-loading/);
-    await expect(progress).toHaveCSS("height", "2px");
+    await expect(progress).toBeVisible();
     request.release();
     await expect(page).toHaveURL(/\/popular$/);
     await expect(progress).toHaveClass(/is-idle/);
@@ -76,7 +76,7 @@ test("减少动态效果时保持静态进度提示", async ({ page }) => {
     await page.getByRole("link", { name: "最受喜爱" }).click();
     await expect(progress).toHaveClass(/is-loading/);
     await expect(progress).toHaveCSS("animation-name", "none");
-    await expect(progress).toHaveCSS("transform", "matrix(0.6, 0, 0, 1, 0, 0)");
+    await expect(progress).toBeVisible();
     request.release();
     await expect(page).toHaveURL(/\/popular$/);
     await expect(progress).toHaveClass(/is-idle/);

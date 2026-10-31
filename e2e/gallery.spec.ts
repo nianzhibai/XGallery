@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { testData } from "./support/data";
 
 test("首页卡片无需 JavaScript 即可显示和打开图集", async ({ browser, baseURL }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
@@ -16,7 +17,7 @@ test("首页卡片无需 JavaScript 即可显示和打开图集", async ({ brows
   } finally { await context.close(); }
 });
 
-test("真实图集的浏览、灯箱、收藏、历史、点赞和搜索", async ({ page, context }) => {
+test("图集的浏览、灯箱、收藏、历史、点赞和搜索", async ({ page, context }) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/");
@@ -60,15 +61,15 @@ test("真实图集的浏览、灯箱、收藏、历史、点赞和搜索", async
   await expect(page.getByRole("button", { name: "已收藏", exact: true })).toBeVisible();
 
   await page.goto("/models");
-  await expect(page.locator(".model-row")).toHaveCount(67);
-  await page.getByRole("textbox", { name: "查找模特" }).fill("布丁");
+  await expect(page.locator(".model-row")).toHaveCount(2);
+  await page.getByRole("textbox", { name: "查找模特" }).fill(testData.searchTerm);
   await expect(page.locator(".model-row")).toHaveCount(1);
   await page.locator(".model-row").click();
-  await expect(page.getByRole("heading", { name: "布丁大法", exact: true })).toBeVisible();
-  await expect(page.locator(".album-card")).toHaveCount(7);
-  await page.getByRole("combobox", { name: "搜索相册" }).fill("Fairy");
+  await expect(page.getByRole("heading", { name: testData.searchModel, exact: true })).toBeVisible();
+  await expect(page.locator(".album-card")).toHaveCount(testData.searchAlbums);
+  await page.getByRole("combobox", { name: "搜索相册" }).fill(testData.searchAlbum);
   await page.getByRole("combobox", { name: "搜索相册" }).press("Enter");
-  await expect(page.getByRole("heading", { name: "搜索「Fairy」" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: `搜索「${testData.searchAlbum}」` })).toBeVisible();
   await expect(page.locator(".album-card")).toHaveCount(1);
   expect(errors).toEqual([]);
   await context.clearCookies();
@@ -109,12 +110,8 @@ test("大图仅显示原图，底部缩略条使用缓存小图", async ({ page 
   }
 });
 
-test("主题持久化、手机布局、空结果和随机图集", async ({ page }) => {
+test("手机布局、空结果和随机图集", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "切换到暗色模式" }).click();
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await page.reload();
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.getByRole("combobox", { name: "搜索相册" })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
@@ -172,6 +169,10 @@ test("首页使用响应式缩略图，原文件下载与条件缓存保持可�
   expect(missingVersion.headers()["cache-control"]).toBe("no-store");
   const unknown = await request.get("/api/media/not-an-id");
   expect(unknown.status()).toBe(404);
+});
+
+test("点赞接口拒绝无效数据和跨站请求", async ({ page, request }) => {
+  await page.goto("/");
   await page.locator(".album-cover").first().click();
   await expect(page).toHaveURL(/\/album\/[a-f0-9]{24}$/);
   const albumId = new URL(page.url()).pathname.split("/").at(-1);

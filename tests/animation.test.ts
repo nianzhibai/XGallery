@@ -10,7 +10,6 @@ const temporary = await mkdtemp(path.join(os.tmpdir(), "xgallery-animation-test-
 const root = path.join(temporary, "Albums");
 process.env.ALBUMS_DIR = root;
 process.env.DATABASE_PATH = path.join(temporary, "catalog.db");
-process.env.INCLUDE_ANIMATED_IMAGES = "false";
 const { stableId, syncAlbums } = await import("../src/lib/sync");
 const { getAlbums, getPhotos } = await import("../src/lib/catalog");
 const { getDatabase } = await import("../src/lib/db");
@@ -36,7 +35,6 @@ test("索引动图，并在重新同步时复用未更改图片的尺寸", async
   const animatedId = stableId(path.relative(root, path.join(albumPath, "03-animated.gif")));
   getDatabase().sqlite.prepare("UPDATE photos SET width = 13 WHERE id = ?").run(animatedId);
 
-  process.env.INCLUDE_ANIMATED_IMAGES = "true";
   assert.equal((await syncAlbums()).photos, 5);
   assert.deepEqual(filenames(), ["01-static.gif", "02-static.png", "03-animated.gif", "04-animated.webp", "05-animated.png"]);
   assert.equal(getPhotos(getAlbums()[0].id).find((photo) => photo.id === animatedId)?.width, 13, "复用未更改图片的尺寸");
