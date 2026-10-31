@@ -64,3 +64,34 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   });
 }
+
+test("进入图集后返回首页，保留两个分区换批后的内容", async ({ page }) => {
+  await page.goto("/");
+  const recent = page.getByRole("region", { name: "最近更新" });
+  const random = page.getByRole("region", { name: "随机漫游" });
+  const links = (section: typeof recent) => section.locator(".album-cover").evaluateAll((elements) => elements.map((element) => element.getAttribute("href")));
+
+  for (const section of [recent, random]) {
+    const before = await links(section);
+    const button = section.getByRole("button", { name: "换一批" });
+    await button.click();
+    await expect(button).toBeEnabled();
+    expect(await links(section)).not.toEqual(before);
+  }
+  const expectedRecent = await links(recent);
+  const expectedRandom = await links(random);
+
+  await random.locator(".album-cover").first().click();
+  await expect(page.locator(".album-title")).toBeVisible();
+  await page.getByRole("button", { name: "返回", exact: true }).click();
+  await expect(page).toHaveURL("/");
+  await expect.poll(() => links(recent)).toEqual(expectedRecent);
+  await expect.poll(() => links(random)).toEqual(expectedRandom);
+  await expect(page.getByRole("region", { name: "最近看过" })).toBeVisible();
+
+  await recent.locator(".album-cover").first().click();
+  await expect(page.locator(".album-title")).toBeVisible();
+  await page.goBack();
+  await expect.poll(() => links(recent)).toEqual(expectedRecent);
+  await expect.poll(() => links(random)).toEqual(expectedRandom);
+});

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { NavigationLink as Link } from "./navigation-link";
 import { ArrowRight, RotateCw } from "lucide-react";
 import { motion } from "motion/react";
@@ -9,13 +9,20 @@ import { shuffle } from "@/lib/utils";
 import { AlbumGrid } from "./album-card";
 import { useLibrary } from "./providers";
 import { Button } from "./ui/button";
+import { useHomeBatches } from "./home-batches";
 
-function RefreshableSection({ title, headingId, pool, initialAlbums, count, first = false }: {
-  title: string; headingId: string; pool: Album[]; initialAlbums: Album[]; count: number; first?: boolean;
+function RefreshableSection({ section, title, headingId, pool, initialAlbums, count, first = false }: {
+  section: "recent" | "random"; title: string; headingId: string; pool: Album[]; initialAlbums: Album[]; count: number; first?: boolean;
 }) {
-  const [batch, setBatch] = useState({ albums: initialAlbums, key: 0 });
+  const { batches, saveBatch } = useHomeBatches();
+  const [batch, setBatch] = useState(() => {
+    const saved = batches[section]?.map((id) => pool.find((album) => album.id === id));
+    return { albums: saved && saved.length === initialAlbums.length && saved.every((album): album is Album => !!album) ? saved : initialAlbums, key: 0 };
+  });
   const [refreshing, setRefreshing] = useState(false);
   const pendingBatch = useRef<number | null>(null);
+
+  useEffect(() => { saveBatch(section, batch.albums.map((album) => album.id)); }, [batch.albums, saveBatch, section]);
 
   function refresh() {
     if (pendingBatch.current !== null) return;
@@ -49,8 +56,8 @@ export function HomeGallery({ albums, initialRandom }: { albums: Album[]; initia
   const { library } = useLibrary();
   const viewed = library.recent.map((id) => albums.find((album) => album.id === id)).filter((album): album is Album => !!album).slice(0, 8);
   return <>
-    <RefreshableSection title="最近更新" headingId="recent-heading" pool={albums.slice(0, Math.max(24, Math.ceil(albums.length / 2)))} initialAlbums={albums.slice(0, 8)} count={8} first />
-    <RefreshableSection title="随机漫游" headingId="random-heading" pool={albums} initialAlbums={initialRandom} count={16} />
+    <RefreshableSection section="recent" title="最近更新" headingId="recent-heading" pool={albums.slice(0, Math.max(24, Math.ceil(albums.length / 2)))} initialAlbums={albums.slice(0, 8)} count={8} first />
+    <RefreshableSection section="random" title="随机漫游" headingId="random-heading" pool={albums} initialAlbums={initialRandom} count={16} />
     {viewed.length > 0 && <section className="home-section" aria-labelledby="viewed-heading"><div className="section-head"><h2 id="viewed-heading" className="section-title">最近看过</h2><Button asChild><Link href="/library?tab=recent">全部<ArrowRight size={13} /></Link></Button></div><AlbumGrid albums={viewed} overlay /></section>}
   </>;
 }
