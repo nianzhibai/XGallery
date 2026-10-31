@@ -46,11 +46,11 @@ export const AlbumCard = forwardRef<HTMLElement, {
   </motion.article>;
 });
 
-export function AlbumGrid({ albums, overlay = false, onRemove, removeLabel, batchKey = 0, onEnterComplete }: {
-  albums: Album[]; overlay?: boolean; onRemove?: (id: string) => void; removeLabel?: string; batchKey?: number; onEnterComplete?: () => void;
+export function AlbumGrid({ albums, overlay = false, onRemove, removeLabel, batchKey = 0, skipEntrance = false, onEnterComplete }: {
+  albums: Album[]; overlay?: boolean; onRemove?: (id: string) => void; removeLabel?: string; batchKey?: number; skipEntrance?: boolean; onEnterComplete?: () => void;
 }) {
   const reducedMotion = useReducedMotion();
-  return <AnimatePresence mode="wait"><motion.div key={batchKey} className="albums-grid" initial={false}
+  return <AnimatePresence mode="wait"><motion.div key={batchKey} className={`albums-grid${skipEntrance ? " skip-entrance" : ""}`} initial={false}
     exit={{ opacity: 0, y: reducedMotion ? 0 : -5 }} transition={{ duration: reducedMotion ? 0 : 0.18, ease: [0.4, 0, 1, 1] }}>
     <AnimatePresence initial={false} mode="popLayout">{albums.map((album, index) => <AlbumCard key={album.id} album={album} index={index} overlay={overlay}
       remove={onRemove ? () => onRemove(album.id) : undefined} removeLabel={removeLabel} onEnterComplete={index === albums.length - 1 ? onEnterComplete : undefined} />)}</AnimatePresence>

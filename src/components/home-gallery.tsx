@@ -11,8 +11,8 @@ import { useLibrary } from "./providers";
 import { Button } from "./ui/button";
 import { useHomeBatches } from "./home-batches";
 
-function RefreshableSection({ section, title, headingId, pool, initialAlbums, count, first = false }: {
-  section: "recent" | "random"; title: string; headingId: string; pool: Album[]; initialAlbums: Album[]; count: number; first?: boolean;
+function RefreshableSection({ section, title, headingId, pool, initialAlbums, count, restored, first = false }: {
+  section: "recent" | "random"; title: string; headingId: string; pool: Album[]; initialAlbums: Album[]; count: number; restored: boolean; first?: boolean;
 }) {
   const { batches, saveBatch } = useHomeBatches();
   const [batch, setBatch] = useState(() => {
@@ -42,22 +42,24 @@ function RefreshableSection({ section, title, headingId, pool, initialAlbums, co
   }
 
   const Heading = first ? "h1" : "h2";
-  return <section className={`home-section${first ? " home-section-first" : ""}`} aria-labelledby={headingId} aria-busy={refreshing}>
+  return <section className={`home-section${first ? " home-section-first" : ""}${restored ? " home-section-restored" : ""}`} aria-labelledby={headingId} aria-busy={refreshing}>
     <div className="section-head"><Heading id={headingId} className="section-title">{title}</Heading>
       <Button className="refresh-button" aria-disabled={refreshing} aria-busy={refreshing} onClick={refresh}>
         <motion.span className="refresh-icon" aria-hidden="true" initial={false} animate={{ rotate: batch.key * 360 }} transition={{ duration: 0.9, ease: [0.45, 0, 0.2, 1] }}><RotateCw size={13} /></motion.span>换一批
       </Button>
     </div>
-    <AlbumGrid albums={batch.albums} overlay batchKey={batch.key} onEnterComplete={() => finishRefresh(batch.key)} />
+    <AlbumGrid albums={batch.albums} overlay batchKey={batch.key} skipEntrance={restored && batch.key === 0} onEnterComplete={() => finishRefresh(batch.key)} />
   </section>;
 }
 
 export function HomeGallery({ albums, recentPool, initialRecent, initialRandom }: { albums: Album[]; recentPool: Album[]; initialRecent: Album[]; initialRandom: Album[] }) {
   const { library } = useLibrary();
+  const { batches } = useHomeBatches();
+  const [restored] = useState(() => !!batches.recent && !!batches.random);
   const viewed = library.recent.map((id) => albums.find((album) => album.id === id)).filter((album): album is Album => !!album).slice(0, 8);
   return <>
-    <RefreshableSection section="recent" title="最近更新" headingId="recent-heading" pool={recentPool} initialAlbums={initialRecent} count={8} first />
-    <RefreshableSection section="random" title="随机漫游" headingId="random-heading" pool={albums} initialAlbums={initialRandom} count={16} />
-    {viewed.length > 0 && <section className="home-section" aria-labelledby="viewed-heading"><div className="section-head"><h2 id="viewed-heading" className="section-title">最近看过</h2><Button asChild><Link href="/library?tab=recent">全部<ArrowRight size={13} /></Link></Button></div><AlbumGrid albums={viewed} overlay /></section>}
+    <RefreshableSection section="recent" title="最近更新" headingId="recent-heading" pool={recentPool} initialAlbums={initialRecent} count={8} restored={restored} first />
+    <RefreshableSection section="random" title="随机漫游" headingId="random-heading" pool={albums} initialAlbums={initialRandom} count={16} restored={restored} />
+    {viewed.length > 0 && <section className={`home-section${restored ? " home-section-restored" : ""}`} aria-labelledby="viewed-heading"><div className="section-head"><h2 id="viewed-heading" className="section-title">最近看过</h2><Button asChild><Link href="/library?tab=recent">全部<ArrowRight size={13} /></Link></Button></div><AlbumGrid albums={viewed} overlay skipEntrance={restored} /></section>}
   </>;
 }

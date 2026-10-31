@@ -11,12 +11,15 @@ import { ThemeToggle } from "./theme-toggle";
 import { cn } from "@/lib/utils";
 import { useScrollHeader } from "@/lib/use-scroll-header";
 import { useDocumentNavigationProgress, useNavigationPending } from "./navigation-progress";
+import { useHomeBatches } from "./home-batches";
 
 export function SiteHeader({ models, query = "" }: { models: Model[]; query?: string }) {
   const pathname = usePathname();
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
-  const header = useScrollHeader<HTMLDivElement>();
+  const { batches } = useHomeBatches();
+  const [restoringHome] = useState(() => pathname === "/" && !!batches.recent && !!batches.random);
+  const header = useScrollHeader<HTMLDivElement>(restoringHome);
   const [pending, startTransition] = useTransition();
   useNavigationPending(pending);
   const startDocumentNavigation = useDocumentNavigationProgress();
