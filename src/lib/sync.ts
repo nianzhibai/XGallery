@@ -15,16 +15,17 @@ export const stableId = (value: string) => createHash("sha256").update(value).di
 /** Top-level directory whose album subdirectories belong to no model. */
 export const unassignedDirectory = "@未分类";
 
-const isImage = (entry: Dirent) => entry.isFile() && imageExtensions.has(path.extname(entry.name).toLowerCase());
-const isVisibleDirectory = (entry: Dirent) => entry.isDirectory() && !entry.name.startsWith(".");
+// Hidden files and directories are never indexed.
+const isVisible = (entry: Dirent) => !entry.name.startsWith(".");
+const isImage = (entry: Dirent) => isVisible(entry) && entry.isFile() && imageExtensions.has(path.extname(entry.name).toLowerCase());
+const isVisibleDirectory = (entry: Dirent) => isVisible(entry) && entry.isDirectory();
 
 async function findImages(directory: string): Promise<string[]> {
   const entries = await readdir(directory, { withFileTypes: true });
   const result: string[] = [];
   for (const entry of entries) {
-    if (entry.name.startsWith(".")) continue;
     const filename = path.join(directory, entry.name);
-    if (entry.isDirectory()) result.push(...await findImages(filename));
+    if (isVisibleDirectory(entry)) result.push(...await findImages(filename));
     else if (isImage(entry)) result.push(filename);
   }
   return result.sort((a, b) => collator.compare(a, b));

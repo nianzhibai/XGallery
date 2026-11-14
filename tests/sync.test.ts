@@ -9,7 +9,7 @@ const temporary = await mkdtemp(path.join(os.tmpdir(), "xgallery-test-"));
 const root = path.join(temporary, "Albums");
 process.env.ALBUMS_DIR = root;
 process.env.DATABASE_PATH = path.join(temporary, "catalog.db");
-const { syncAlbums } = await import("../src/lib/sync");
+const { syncAlbums, unassignedDirectory } = await import("../src/lib/sync");
 const { listAlbums, listPhotos, setLike } = await import("../src/lib/catalog");
 const { getDatabase } = await import("../src/lib/db");
 const { resolveMediaPath } = await import("../src/lib/media");
@@ -163,4 +163,22 @@ test("索引支持中文、嵌套目录、自然排序和 EXIF 方向，并安�
   assert.equal(listAlbums().albums.length, 0);
   assert.equal(randomAlbum().headers.get("location"), "/", "没有图集时返回首页");
   assert.equal(listPhotos(album.id).length, 0);
+});
+
+test("模特目录和未分类目录中的隐藏图片不会被索引", async () => {
+  const image = sharp({ create: { width: 4, height: 3, channels: 3, background: "white" } }).jpeg();
+  const modelPath = path.join(root, "散图模特");
+  const unassignedPath = path.join(root, unassignedDirectory);
+  await mkdir(modelPath, { recursive: true });
+  await mkdir(unassignedPath, { recursive: true });
+  for (const filename of [path.join(modelPath, ".hidden.jpg"), path.join(modelPath, "1.jpg"), path.join(unassignedPath, ".hidden.jpg")]) {
+    await image.clone().toFile(filename);
+  }
+  const result = await syncAlbums();
+  const [album] = listAlbums().albums;
+  assert.deepEqual(listPhotos(album.id).map((photo) => photo.filename), ["1.jpg"]);
+  assert.equal(album.coverId, listPhotos(album.id)[0].id);
+  assert.deepEqual(result.warnings, [], "未分类目录中的隐藏图片不产生警告");
+  await rm(modelPath, { recursive: true });
+  await rm(unassignedPath, { recursive: true });
 });
