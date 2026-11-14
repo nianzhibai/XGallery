@@ -29,10 +29,10 @@ curl 'https://example.com/api/v1/albums?page=1&limit=20' \
 图集列表还支持 `modelId` 筛选、`q` 搜索模特名和图集名，以及 `sort` 排序：`updated`（默认）、`title` 或 `popular`。搜索最多 100 个字符，空格分隔的词都必须匹配；ASCII 字母不区分大小写。
 
 - 模特字段：`id`、`name`、`albumCount`、`photoCount`、`coverUrl`。
-- 图集字段：`id`、`title`、`model`、`photoCount`、`totalBytes`、`likeCount`、`coverUrl`、`updatedAt`（UTC）。
+- 图集字段：`id`、`title`、`model`（`{ id, name }`，未分类图集为 `null`）、`photoCount`、`totalBytes`、`likeCount`、`coverUrl`、`updatedAt`（UTC）。
 - 照片字段：`id`、`filename`、`width`、`height`、`position`（从 0 开始）、`imageUrl`。
 
-随机照片返回 `{ "data": { ... } }`，字段与照片列表相同，另包含所属图集的 `albumId`、模特的 `modelId` 和 `modelName`；图库为空时返回 404。每次请求从全部照片中随机选择一张，结果可能重复。
+随机照片返回 `{ "data": { ... } }`，字段与照片列表相同，另包含所属图集的 `albumId`、模特的 `modelId` 和 `modelName`（未分类图集均为 `null`）；图库为空时返回 404。每次请求从全部照片中随机选择一张，结果可能重复。
 
 `coverUrl` 和 `imageUrl` 是站内相对路径，请补上图库域名并携带 API key 请求；返回内容是原图。图片更改并同步后需重新获取地址；移动或重命名文件会改变资源 ID。
 

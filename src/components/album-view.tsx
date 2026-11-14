@@ -8,6 +8,7 @@ import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { ArrowRight, Bookmark, ChevronLeft, Dice5, Heart, Share2 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import type { Album, Photo } from "@/lib/types";
+import { albumLabel } from "@/lib/utils";
 import { AlbumGrid } from "./album-card";
 import { PhotoWall } from "./photo-wall";
 import { useLibrary } from "./providers";
@@ -18,6 +19,7 @@ import { useScrollHeader } from "@/lib/use-scroll-header";
 import { useDocumentNavigationProgress, useNavigationPending } from "./navigation-progress";
 
 export function AlbumView({ album, photos, related, modelAlbumCount }: { album: Album; photos: Photo[]; related: Album[]; modelAlbumCount: number }) {
+  const { model } = album;
   const router = useRouter();
   const header = useScrollHeader<HTMLElement>();
   const { library, ready, toggleFavorite, visit, toast, setLiked } = useLibrary();
@@ -46,7 +48,7 @@ export function AlbumView({ album, photos, related, modelAlbumCount }: { album: 
   async function share() {
     const url = window.location.href;
     try {
-      if (navigator.share) { await navigator.share({ title: `${album.modelName} · ${album.title}`, url }); return; }
+      if (navigator.share) { await navigator.share({ title: albumLabel(album), url }); return; }
       await navigator.clipboard.writeText(url); toast("图集链接已复制");
     } catch (error) {
       if ((error as Error).name !== "AbortError") toast("请复制地址栏中的图集链接");
@@ -57,7 +59,7 @@ export function AlbumView({ album, photos, related, modelAlbumCount }: { album: 
     <header ref={header} className="album-topbar scroll-header"><Button variant="ghost" className="back-link" onClick={() => window.history.length > 1 ? router.back() : startBackTransition(() => router.push("/"))}><ChevronLeft size={17} />返回</Button><div className="album-top-actions"><span>{photos.length} 张</span><Tooltip label="随机漫游"><a href="/random" className="icon-button" aria-label="随机浏览图集" onClick={startDocumentNavigation}><Dice5 /></a></Tooltip><ThemeToggle /></div></header>
     <main id="main-content" className="album-main">
       <div className="album-intro">
-        <Link href={`/model/${album.modelId}`} className="model-breadcrumb"><span className="breadcrumb-label">模特主页</span><span>{album.modelName}</span><span className="breadcrumb-meta">全部 {modelAlbumCount} 个图集 <ArrowRight size={12} /></span></Link>
+        {model && <Link href={`/model/${model.id}`} className="model-breadcrumb"><span className="breadcrumb-label">模特主页</span><span>{model.name}</span><span className="breadcrumb-meta">全部 {modelAlbumCount} 个图集 <ArrowRight size={12} /></span></Link>}
         <h1 className="album-title">{album.title}</h1>
         <div className="album-actions"><Button size="small" className={`album-like${liked ? " is-liked" : ""}`} disabled={pending || !ready} onClick={() => void like()} aria-label={liked ? "取消点赞" : "点赞图集"} aria-pressed={liked}>
           <Heart size={14} fill={liked ? "currentColor" : "none"} />{liked && <span className="like-ring" aria-hidden="true" />}
@@ -68,10 +70,10 @@ export function AlbumView({ album, photos, related, modelAlbumCount }: { album: 
         </div>
       </div>
       <PhotoWall photos={photos} title={album.title} />
-      {related.length > 0 && <section className="home-section related-section">
+      {model && related.length > 0 && <section className="home-section related-section">
         <div className="section-head">
-          <div><h2 className="section-title"><Link href={`/model/${album.modelId}`}>更多<span className="quote-mark">「</span>{album.modelName}<span className="quote-mark">」</span></Link></h2><p className="section-subtitle">{modelAlbumCount - 1} 个图集</p></div>
-          {modelAlbumCount - 1 > related.length && <Button asChild><Link href={`/model/${album.modelId}`}>进入模特主页<ArrowRight size={13} /></Link></Button>}
+          <div><h2 className="section-title"><Link href={`/model/${model.id}`}>更多<span className="quote-mark">「</span>{model.name}<span className="quote-mark">」</span></Link></h2><p className="section-subtitle">{modelAlbumCount - 1} 个图集</p></div>
+          {modelAlbumCount - 1 > related.length && <Button asChild><Link href={`/model/${model.id}`}>进入模特主页<ArrowRight size={13} /></Link></Button>}
         </div>
         <AlbumGrid albums={related} overlay />
       </section>}

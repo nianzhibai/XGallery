@@ -7,5 +7,5 @@ export function GET(request: Request) {
   if (denied) return denied;
   const photo = randomPhoto();
   if (!photo) return notFound("图库中没有照片");
-  return json({ data: { ...photoResource(photo), albumId: photo.albumId, modelId: photo.modelId, modelName: photo.modelName } });
+  return json({ data: { ...photoResource(photo), albumId: photo.albumId, modelId: photo.model?.id ?? null, modelName: photo.model?.name ?? null } });
 }

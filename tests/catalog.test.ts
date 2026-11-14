@@ -49,7 +49,7 @@ test("目录查询按需读取图集和模特", async (t) => {
     const page = catalog.listAlbums({ sort: "title", page: { limit: 5, offset: 5 } });
     assert.equal(page.total, 31);
     assert.deepEqual(page.albums.map((album) => album.title), ["Set 05", "Set 06", "Set 07", "Set 08", "Set 09"]);
-    const model = catalog.findModel(updated[0].modelId)!;
+    const model = catalog.findModel(updated[0].model!.id)!;
     assert.equal(catalog.listAlbums({ modelId: model.id, page: { limit: 24, offset: 24 } }).albums.length, model.albumCount - 24);
   });
 

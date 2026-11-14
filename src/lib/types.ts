@@ -1,8 +1,8 @@
 export type Album = {
   id: string;
   title: string;
-  modelId: string;
-  modelName: string;
+  /** Null for albums in the unassigned directory. */
+  model: Pick<Model, "id" | "name"> | null;
   coverId: string;
   coverVersion: string;
   photoCount: number;

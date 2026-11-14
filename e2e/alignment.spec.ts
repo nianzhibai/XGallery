@@ -22,9 +22,7 @@ test("浏览记录可逐条移除且不影响收藏", async ({ page }) => {
   await expect(page.locator(".album-card-overlay")).toHaveCount(1);
   await expect(page.locator(".album-card .cover-title")).toHaveText(title);
   await page.goto(href!);
-  const modelName = await page.locator(".model-breadcrumb span").nth(1).innerText();
-  const albumTitle = await page.locator(".album-title").innerText();
-  expect(title).toBe(`${modelName} · ${albumTitle}`);
+  await expect(page).toHaveTitle(`${title} · XGallery`);
 });
 
 test("收藏为空时显示简洁提示", async ({ page }) => {
@@ -93,4 +91,19 @@ test("大图缩略条居中，并保持当前照片可见", async ({ page }) => 
     const bounds = element.getBoundingClientRect();
     return Math.abs(bounds.left + bounds.width / 2 - window.innerWidth / 2) < 2;
   })).toBe(true);
+});
+
+test("未分类图集不显示模特信息", async ({ page }) => {
+  await page.goto(`/search?q=${encodeURIComponent(testData.unassignedAlbum)}`);
+  const card = page.locator(".album-card");
+  await expect(card).toHaveCount(1);
+  await expect(card.locator(".cover-title")).toHaveText(testData.unassignedAlbum);
+  await card.locator(".album-cover").click();
+  await expect(page.locator(".album-title")).toHaveText(testData.unassignedAlbum);
+  await expect(page).toHaveTitle(`${testData.unassignedAlbum} · XGallery`);
+  await expect(page.locator(".model-breadcrumb")).toHaveCount(0);
+  await expect(page.locator(".related-section")).toHaveCount(0);
+  await expect(page.locator(".photo-tile")).toHaveCount(testData.photosPerAlbum);
+  await page.goto("/models");
+  await expect(page.locator(".model-row")).toHaveCount(2);
 });

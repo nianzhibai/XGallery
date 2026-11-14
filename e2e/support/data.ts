@@ -5,5 +5,6 @@ export const testData = {
   searchTerm: "测试",
   searchAlbums: 7,
   searchAlbum: "Fairy",
+  unassignedAlbum: "街拍",
   photosPerAlbum: 5,
 };

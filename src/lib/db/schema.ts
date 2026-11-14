@@ -8,7 +8,8 @@ export const models = sqliteTable("models", {
 
 export const albums = sqliteTable("albums", {
   id: text("id").primaryKey(),
-  modelId: text("model_id").notNull().references(() => models.id, { onDelete: "cascade" }),
+  // Null for albums in the unassigned directory.
+  modelId: text("model_id").references(() => models.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   relativePath: text("relative_path").notNull().unique(),
   coverId: text("cover_id").notNull(),

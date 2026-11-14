@@ -12,7 +12,7 @@ export function photoResource(photo: Photo) {
 }
 
 export function albumResource(album: Album) {
-  return { id: album.id, title: album.title, model: { id: album.modelId, name: album.modelName },
+  return { id: album.id, title: album.title, model: album.model,
     photoCount: album.photoCount, totalBytes: album.totalBytes, likeCount: album.likes,
     coverUrl: photoUrl(album.coverId, album.coverVersion), updatedAt: new Date(album.updatedAt).toISOString() };
 }

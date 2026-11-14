@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import sharp from "sharp";
 import { testData } from "./data";
+import { unassignedDirectory } from "../../src/lib/sync";
 
 const temporary = await mkdtemp(path.join(os.tmpdir(), "xgallery-e2e-"));
 const albumsDirectory = path.join(temporary, "albums");
@@ -32,15 +33,18 @@ process.on("SIGINT", stop);
 
 try {
   const image = await sharp({ create: { width: 1200, height: 1800, channels: 3, background: "#ad8b63" } }).jpeg().toBuffer();
+  const createAlbum = async (directory: string) => {
+    await mkdir(directory, { recursive: true });
+    await Promise.all(Array.from({ length: testData.photosPerAlbum }, (_, photo) =>
+      writeFile(path.join(directory, `${photo + 1}.jpg`), image)));
+  };
   for (const [model, count] of [[testData.paginatedModel, testData.paginatedAlbums], [testData.searchModel, testData.searchAlbums]] as const) {
     for (let index = 1; index <= count; index++) {
       const title = model === testData.searchModel && index === 1 ? testData.searchAlbum : `图集 ${String(index).padStart(2, "0")}`;
-      const directory = path.join(albumsDirectory, model, title);
-      await mkdir(directory, { recursive: true });
-      await Promise.all(Array.from({ length: testData.photosPerAlbum }, (_, photo) =>
-        writeFile(path.join(directory, `${photo + 1}.jpg`), image)));
+      await createAlbum(path.join(albumsDirectory, model, title));
     }
   }
+  await createAlbum(path.join(albumsDirectory, unassignedDirectory, testData.unassignedAlbum));
 
   Object.assign(process.env, {
     ALBUMS_DIR: albumsDirectory,

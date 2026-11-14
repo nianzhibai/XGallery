@@ -20,11 +20,11 @@ const inPool = (pool: AlbumPool) => pool === "recent" ? sql`${albums.id} in ${re
 
 function selectAlbums(where?: SQL) {
   return getDatabase().db.select({
-    id: albums.id, title: albums.title, modelId: albums.modelId, modelName: models.name,
+    id: albums.id, title: albums.title, model: { id: models.id, name: models.name },
     coverId: albums.coverId, coverVersion: photoVersion, photoCount: albums.photoCount,
     totalBytes: albums.totalBytes, updatedAt: albums.updatedAt, likes: albumLikes,
   }).from(albums)
-    .innerJoin(models, eq(models.id, albums.modelId))
+    .leftJoin(models, eq(models.id, albums.modelId))
     .innerJoin(photos, eq(photos.id, albums.coverId))
     .where(where).$dynamic();
 }
@@ -32,7 +32,7 @@ function selectAlbums(where?: SQL) {
 // SQLite's built-in lower() only folds ASCII; unicode_lower is registered on the connection.
 function matchesQuery(query: string) {
   const terms = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
-  return and(...terms.map((term) => sql`instr(unicode_lower(${models.name} || ' ' || ${albums.title}), ${term}) > 0`));
+  return and(...terms.map((term) => sql`instr(unicode_lower(coalesce(${models.name} || ' ', '') || ${albums.title}), ${term}) > 0`));
 }
 
 export function listAlbums({ modelId, query = "", sort = "updated", page }: {
@@ -45,7 +45,7 @@ export function listAlbums({ modelId, query = "", sort = "updated", page }: {
     return { albums: all, total: all.length };
   }
   const { total } = getDatabase().db.select({ total: count() }).from(albums)
-    .innerJoin(models, eq(models.id, albums.modelId)).where(where).get()!;
+    .leftJoin(models, eq(models.id, albums.modelId)).where(where).get()!;
   return { albums: rows.limit(page.limit).offset(page.offset).all(), total };
 }
 
@@ -121,10 +121,10 @@ export function randomPhoto() {
     id: photos.id, filename: photos.filename,
     width: photos.width, height: photos.height, position: photos.position,
     version: photoVersion,
-    albumId: photos.albumId, modelId: albums.modelId, modelName: models.name,
+    albumId: photos.albumId, model: { id: models.id, name: models.name },
   }).from(photos)
     .innerJoin(albums, eq(albums.id, photos.albumId))
-    .innerJoin(models, eq(models.id, albums.modelId))
+    .leftJoin(models, eq(models.id, albums.modelId))
     .orderBy(sql`random()`).limit(1).get();
 }
 

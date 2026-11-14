@@ -55,7 +55,7 @@ export function startAlbumSyncScheduler() {
     try {
       const result = await syncAlbums(console.log);
       console.log(`定时同步完成：${result.models} 位模特 / ${result.albums} 个图集 / ${result.photos} 张图片`);
-      if (result.warnings.length) console.warn("跳过无法读取的图片：", result.warnings);
+      if (result.warnings.length) console.warn("已跳过的图片：", result.warnings);
     } catch (error) {
       console.error("定时同步失败，原有索引保留：", error);
     }
