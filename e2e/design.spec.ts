@@ -117,7 +117,7 @@ for (const [system, saved, color] of [["light", "dark", "#0d0c0b"], ["dark", "li
   });
 }
 
-test("收藏不推挤相邻按钮，大图双击点赞后正常返回", async ({ page }) => {
+test("收藏不推挤相邻按钮，大图双击放大后正常返回", async ({ page }) => {
   await page.goto("/");
   await page.locator(".album-cover").first().click();
   const favorite = page.getByRole("button", { name: "收藏", exact: true });
@@ -131,10 +131,9 @@ test("收藏不推挤相邻按钮，大图双击点赞后正常返回", async ({
   const photo = page.locator(".pswp__item[aria-hidden='false'] img.pswp__img:not(.pswp__img--placeholder)");
   await expect.poll(() => photo.evaluate((element) => (element as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
   await photo.dblclick();
-  await expect(page.locator(".pswp__like-heart")).toBeVisible();
+  await expect(page.locator(".pswp")).toHaveClass(/pswp--zoomed-in/);
   await page.keyboard.press("Escape");
   await expect(page.locator(".pswp")).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "取消点赞", exact: true })).toBeVisible();
-  await expect(page.locator(".like-count")).toHaveText(String(previousLikes + 1));
-  await page.getByRole("button", { name: "取消点赞", exact: true }).click();
+  await expect(page.getByRole("button", { name: "点赞图集", exact: true })).toBeVisible();
+  await expect(page.locator(".like-count")).toHaveText(String(previousLikes));
 });

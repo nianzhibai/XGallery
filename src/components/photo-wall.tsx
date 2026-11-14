@@ -8,12 +8,10 @@ import type { Photo } from "@/lib/types";
 import { imageUrl, thumbnailUrl } from "@/lib/utils";
 import { justifiedRows } from "@/lib/justified-layout";
 
-export function PhotoWall({ photos, title, onLike }: { photos: Photo[]; title: string; onLike: () => void }) {
+export function PhotoWall({ photos, title }: { photos: Photo[]; title: string }) {
   const wall = useRef<HTMLDivElement>(null);
   const lightbox = useRef<PhotoSwipeLightbox | null>(null);
-  const onLikeRef = useRef(onLike);
   const [width, setWidth] = useState(0);
-  useEffect(() => { onLikeRef.current = onLike; }, [onLike]);
   useEffect(() => {
     if (!wall.current) return;
     const observer = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
@@ -36,22 +34,8 @@ export function PhotoWall({ photos, title, onLike }: { photos: Photo[]; title: s
       closeTitle: "关闭", arrowPrevTitle: "上一张", arrowNextTitle: "下一张",
       errorMsg: "这张图片暂时无法加载，请关闭后重试。",
       imageClickAction: "toggle-controls",
-      doubleTapAction: (_point, event) => likeAt(event.clientX, event.clientY),
     });
 
-    function likeAt(x: number, y: number) {
-      onLikeRef.current();
-      const root = instance.pswp?.element;
-      if (!root) return;
-      const heart = document.createElement("span");
-      heart.className = "pswp__like-heart";
-      heart.setAttribute("aria-hidden", "true");
-      heart.style.left = `${x}px`;
-      heart.style.top = `${y}px`;
-      heart.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/></svg>';
-      heart.addEventListener("animationend", () => heart.remove(), { once: true });
-      root.appendChild(heart);
-    }
     instance.on("contentLoadImage", ({ content }) => {
       if (content.element instanceof HTMLImageElement) {
         content.element.fetchPriority = content.index === (instance.pswp?.currIndex ?? instance.options.index) ? "high" : "low";
@@ -60,14 +44,20 @@ export function PhotoWall({ photos, title, onLike }: { photos: Photo[]; title: s
     instance.on("uiRegister", () => {
       const pswp = instance.pswp!;
       const root = pswp.element;
+      // PhotoSwipe only detects double taps for touch input; zoom on mouse double-click too.
+      let mousePointer = false;
+      const trackPointer = (event: PointerEvent) => { mousePointer = event.pointerType === "mouse"; };
       const doubleClick = (event: MouseEvent) => {
-        if (event.target instanceof HTMLImageElement && event.target.classList.contains("pswp__img")) {
-          event.preventDefault();
-          likeAt(event.clientX, event.clientY);
-        }
+        if (!mousePointer || !(event.target instanceof HTMLElement && event.target.classList.contains("pswp__img"))) return;
+        event.preventDefault();
+        pswp.currSlide?.toggleZoom({ x: event.pageX - pswp.offset.x, y: event.pageY - pswp.offset.y });
       };
+      root?.addEventListener("pointerdown", trackPointer);
       root?.addEventListener("dblclick", doubleClick);
-      pswp.on("destroy", () => root?.removeEventListener("dblclick", doubleClick));
+      pswp.on("destroy", () => {
+        root?.removeEventListener("pointerdown", trackPointer);
+        root?.removeEventListener("dblclick", doubleClick);
+      });
       pswp.ui?.registerElement({
         name: "download", order: 7, isButton: true, tagName: "a", title: "下载原图", ariaLabel: "下载原图",
         html: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3v12m-4-4 4 4 4-4M5 18v3h14v-3"/></svg>',

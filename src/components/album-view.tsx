@@ -64,10 +64,10 @@ export function AlbumView({ album, photos, related, modelAlbumCount }: { album: 
           <AnimatePresence initial={false} mode="popLayout"><motion.span key={likeCount} className="like-count" initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} transition={{ duration: 0.22, ease: [0.2, 0.7, 0.2, 1] }}>{likeCount}</motion.span></AnimatePresence>
         </Button>
           <Button size="small" className={`favorite-button${saved ? " is-active" : ""}`} onClick={() => { toggleFavorite(album.id); toast(saved ? "已取消收藏" : "已加入收藏"); }} aria-pressed={saved}><Bookmark size={13} fill={saved ? "currentColor" : "none"} /><span>{saved ? "已收藏" : "收藏"}</span></Button>
-          <Button size="small" onClick={() => void share()}><Share2 size={13} />分享</Button><span className="album-hint">点击照片沉浸浏览 · 双击大图点赞</span>
+          <Button size="small" onClick={() => void share()}><Share2 size={13} />分享</Button><span className="album-hint">点击照片沉浸浏览 · 双击大图放大</span>
         </div>
       </div>
-      <PhotoWall photos={photos} title={album.title} onLike={() => { if (!liked) void like(); }} />
+      <PhotoWall photos={photos} title={album.title} />
       {related.length > 0 && <section className="home-section related-section">
         <div className="section-head">
           <div><h2 className="section-title"><Link href={`/model/${album.modelId}`}>更多<span className="quote-mark">「</span>{album.modelName}<span className="quote-mark">」</span></Link></h2><p className="section-subtitle">{modelAlbumCount - 1} 个图集</p></div>

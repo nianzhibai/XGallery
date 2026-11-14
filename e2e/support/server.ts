@@ -31,7 +31,7 @@ process.on("SIGTERM", stop);
 process.on("SIGINT", stop);
 
 try {
-  const image = await sharp({ create: { width: 120, height: 180, channels: 3, background: "#ad8b63" } }).jpeg().toBuffer();
+  const image = await sharp({ create: { width: 1200, height: 1800, channels: 3, background: "#ad8b63" } }).jpeg().toBuffer();
   for (const [model, count] of [[testData.paginatedModel, testData.paginatedAlbums], [testData.searchModel, testData.searchAlbums]] as const) {
     for (let index = 1; index <= count; index++) {
       const title = model === testData.searchModel && index === 1 ? testData.searchAlbum : `图集 ${String(index).padStart(2, "0")}`;
