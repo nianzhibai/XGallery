@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Bookmark, Dice5, Heart, Search, UsersRound, X } from "lucide-react";
-import type { Model } from "@/lib/types";
+import type { ModelSuggestion } from "@/lib/types";
 import { Tooltip } from "./ui/tooltip";
 import { ThemeToggle } from "./theme-toggle";
 import { cn } from "@/lib/utils";
@@ -13,7 +13,7 @@ import { useScrollHeader } from "@/lib/use-scroll-header";
 import { useDocumentNavigationProgress, useNavigationPending } from "./navigation-progress";
 import { useHomeBatches } from "./home-batches";
 
-export function SiteHeader({ models, query = "" }: { models: Model[]; query?: string }) {
+export function SiteHeader({ query = "" }: { query?: string }) {
   const pathname = usePathname();
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
@@ -23,12 +23,15 @@ export function SiteHeader({ models, query = "" }: { models: Model[]; query?: st
   const [pending, startTransition] = useTransition();
   useNavigationPending(pending);
   const startDocumentNavigation = useDocumentNavigationProgress();
+  const [models, setModels] = useState<ModelSuggestion[]>([]);
+  const suggestionsRequested = useRef(false);
   const [value, setValue] = useState(query);
   const [focused, setFocused] = useState(false);
   const [selected, setSelected] = useState(-1);
   const results = value.trim() ? models.filter((model) => model.name.toLocaleLowerCase().includes(value.trim().toLocaleLowerCase())).slice(0, 5) : [];
   const showSuggestions = focused && results.length > 0;
   useEffect(() => { setValue(query); setSelected(-1); }, [query]);
+  useEffect(() => { suggestionsRequested.current = false; }, [pathname, query]);
   useEffect(() => {
     const handle = (event: KeyboardEvent) => {
       if (event.key === "/" && !event.metaKey && !event.ctrlKey && !event.altKey && !(event.target instanceof HTMLElement && (event.target.isContentEditable || /INPUT|TEXTAREA|SELECT/.test(event.target.tagName)))) {
@@ -38,6 +41,16 @@ export function SiteHeader({ models, query = "" }: { models: Model[]; query?: st
     window.addEventListener("keydown", handle);
     return () => window.removeEventListener("keydown", handle);
   }, []);
+
+  // Loaded on first focus, once per page view, so suggestions reflect the latest sync.
+  function loadSuggestions() {
+    if (suggestionsRequested.current) return;
+    suggestionsRequested.current = true;
+    fetch("/api/models")
+      .then((response) => response.ok ? response.json() as Promise<{ data: ModelSuggestion[] }> : Promise.reject(new Error("模特列表读取失败")))
+      .then(({ data }) => setModels(data))
+      .catch(() => { suggestionsRequested.current = false; });
+  }
 
   function pick(id: string) {
     navigate(`/model/${id}`);
@@ -66,7 +79,7 @@ export function SiteHeader({ models, query = "" }: { models: Model[]; query?: st
         <input ref={input} type="search" name="q" placeholder="搜索相册" aria-label="搜索相册" value={value}
           maxLength={100} autoComplete="off" role="combobox" aria-expanded={showSuggestions} aria-controls="model-suggestions"
           aria-autocomplete="list" aria-activedescendant={showSuggestions && selected >= 0 ? `suggestion-${selected}` : undefined}
-          onChange={(event) => { setValue(event.target.value); setSelected(-1); }} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
+          onChange={(event) => { setValue(event.target.value); setSelected(-1); }} onFocus={() => { setFocused(true); loadSuggestions(); }} onBlur={() => setFocused(false)}
           onKeyDown={(event) => {
             if (event.key === "Escape") { event.preventDefault(); setFocused(false); setSelected(-1); if (!showSuggestions) input.current?.blur(); }
             if (showSuggestions && (event.key === "ArrowDown" || event.key === "ArrowUp")) {

@@ -1,4 +1,5 @@
-import { listAlbums } from "@/lib/api/catalog";
+import { listAlbums } from "@/lib/catalog";
+import { albumResource } from "@/lib/api/resources";
 import { authorize, badRequest, json, paginated, pagination } from "@/lib/api/http";
 
 export function GET(request: Request) {
@@ -11,6 +12,6 @@ export function GET(request: Request) {
   if (sort !== "updated" && sort !== "title" && sort !== "popular") return badRequest("sort 必须是 updated、title 或 popular");
   const query = params.get("q") ?? "";
   if (query.length > 100) return badRequest("q 不能超过 100 个字符");
-  const result = listAlbums(page, { modelId: params.get("modelId") || undefined, query, sort });
-  return json(paginated(result.data, page.page, page.limit, result.total));
+  const result = listAlbums({ modelId: params.get("modelId") || undefined, query, sort, page });
+  return json(paginated(result.albums.map(albumResource), page.page, page.limit, result.total));
 }

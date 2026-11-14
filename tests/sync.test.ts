@@ -10,7 +10,7 @@ const root = path.join(temporary, "Albums");
 process.env.ALBUMS_DIR = root;
 process.env.DATABASE_PATH = path.join(temporary, "catalog.db");
 const { syncAlbums } = await import("../src/lib/sync");
-const { getAlbums, getPhotos, setLike } = await import("../src/lib/catalog");
+const { listAlbums, listPhotos, setLike } = await import("../src/lib/catalog");
 const { getDatabase } = await import("../src/lib/db");
 const { resolveMediaPath } = await import("../src/lib/media");
 const { imageUrl } = await import("../src/lib/utils");
@@ -28,14 +28,14 @@ test("索引支持中文、嵌套目录、自然排序和 EXIF 方向，并安�
   const first = await syncAlbums();
   assert.deepEqual({ models: first.models, albums: first.albums, photos: first.photos }, { models: 1, albums: 1, photos: 2 });
   assert.equal(first.warnings.length, 1);
-  const album = getAlbums()[0];
+  const album = listAlbums().albums[0];
   const { GET: randomAlbum } = await import("../src/app/random/route");
   const randomResponse = randomAlbum();
   assert.equal(randomResponse.status, 307);
   assert.equal(randomResponse.headers.get("location"), `/album/${album.id}`, "随机图集使用站内相对地址");
   assert.equal(randomResponse.headers.get("cache-control"), "no-store");
   assert.equal(album.title, "晨光 [2P]");
-  const photos = getPhotos(album.id);
+  const photos = listPhotos(album.id);
   assert.deepEqual(photos.map((photo) => photo.filename), ["02.jpg", "10.jpg"]);
   assert.deepEqual([photos[1].width, photos[1].height], [90, 60]);
   await t.test("媒体服务原样返回文件，保留 EXIF，下载和缓存行为正确", async () => {
@@ -109,9 +109,9 @@ test("索引支持中文、嵌套目录、自然排序和 EXIF 方向，并安�
   assert.equal(setLike(album.id, "test-visitor", true), 1, "重复请求不重复计数");
   getDatabase().sqlite.prepare("UPDATE albums SET title = ? WHERE id = ?").run("晨光", album.id);
   await syncAlbums();
-  assert.equal(getAlbums()[0].id, album.id);
-  assert.equal(getAlbums()[0].title, "晨光 [2P]", "重新索引恢复完整目录名");
-  assert.equal(getAlbums()[0].likes, 1, "重新索引保留点赞");
+  assert.equal(listAlbums().albums[0].id, album.id);
+  assert.equal(listAlbums().albums[0].title, "晨光 [2P]", "重新索引恢复完整目录名");
+  assert.equal(listAlbums().albums[0].likes, 1, "重新索引保留点赞");
 
   const updatedTime = new Date(Date.now() + 10_000);
   const oldBytes = await readFile(path.join(albumPath, "02.jpg"));
@@ -128,8 +128,8 @@ test("索引支持中文、嵌套目录、自然排序和 EXIF 方向，并安�
   assert.equal(stalePreview.status, 404, "文件变更后不会将新文件缓存到旧预览地址");
   assert.equal(stalePreview.headers.get("cache-control"), "no-store");
   await syncAlbums();
-  assert.notEqual(getAlbums()[0].coverVersion, album.coverVersion, "封面变更后缩略图缓存地址更新");
-  const updatedPhoto = getPhotos(album.id)[0];
+  assert.notEqual(listAlbums().albums[0].coverVersion, album.coverVersion, "封面变更后缩略图缓存地址更新");
+  const updatedPhoto = listPhotos(album.id)[0];
   assert.notEqual(updatedPhoto.version, photos[0].version, "照片变更后图片缓存地址更新");
   const stale = await getOriginal(new Request(oldUrl), originalContext);
   assert.equal(stale.status, 404);
@@ -142,13 +142,13 @@ test("索引支持中文、嵌套目录、自然排序和 EXIF 方向，并安�
 
   await rm(path.join(albumPath, "02.jpg"));
   await syncAlbums();
-  assert.equal(getAlbums()[0].photoCount, 1);
-  assert.equal(getPhotos(album.id).length, 1);
-  assert.equal(getAlbums()[0].coverId, photos[1].id);
+  assert.equal(listAlbums().albums[0].photoCount, 1);
+  assert.equal(listPhotos(album.id).length, 1);
+  assert.equal(listAlbums().albums[0].coverId, photos[1].id);
 
   await rename(root, `${root}-offline`);
   await assert.rejects(syncAlbums());
-  assert.equal(getAlbums().length, 1, "挂载不可用时保留已有索引");
+  assert.equal(listAlbums().albums.length, 1, "挂载不可用时保留已有索引");
   await rename(`${root}-offline`, root);
 
   assert.equal(await resolveMediaPath(path.relative(root, path.join(albumPath, "10.jpg"))), path.join(albumPath, "10.jpg"));
@@ -160,7 +160,7 @@ test("索引支持中文、嵌套目录、自然排序和 EXIF 方向，并安�
   assert.equal(setLike(album.id, "test-visitor", false), 0);
   await rm(path.join(root, "测试模特"), { recursive: true });
   await syncAlbums();
-  assert.equal(getAlbums().length, 0);
+  assert.equal(listAlbums().albums.length, 0);
   assert.equal(randomAlbum().headers.get("location"), "/", "没有图集时返回首页");
-  assert.equal(getPhotos(album.id).length, 0);
+  assert.equal(listPhotos(album.id).length, 0);
 });

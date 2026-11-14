@@ -1,7 +1,7 @@
 import { NavigationLink as Link } from "@/components/navigation-link";
 import { getImageProps } from "next/image";
 import { Heart } from "lucide-react";
-import { getAlbums, getModels } from "@/lib/catalog";
+import { listAlbums } from "@/lib/catalog";
 import { thumbnailUrl } from "@/lib/utils";
 import { SiteHeader } from "@/components/site-header";
 import { EmptyState, PageHeading } from "@/components/page-parts";
@@ -9,9 +9,9 @@ import { EmptyState, PageHeading } from "@/components/page-parts";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "最受喜爱" };
 export default function PopularPage() {
-  const albums = getAlbums().sort((a, b) => b.likes - a.likes || b.updatedAt - a.updatedAt).slice(0, 100);
+  const { albums } = listAlbums({ sort: "popular", page: { limit: 100, offset: 0 } });
   const highestLikes = albums[0]?.likes ?? 0;
-  return <><SiteHeader models={getModels()} /><main id="main-content" className="page-container page-enter"><PageHeading title="最受喜爱" description={`按累计点赞排序 · 前 ${albums.length} 名`} />
+  return <><SiteHeader /><main id="main-content" className="page-container page-enter"><PageHeading title="最受喜爱" description={`按累计点赞排序 · 前 ${albums.length} 名`} />
     {albums.length ? <><ol className="popular-grid">{albums.slice(0, 3).map((album, index) => {
       const { props: cover } = getImageProps({ src: thumbnailUrl(album.coverId, album.coverVersion), alt: `${album.modelName} · ${album.title}`, width: 600, height: 750,
         sizes: "(max-width: 760px) 100vw, 33vw", loading: "eager" });

@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { getAlbum, setLike } from "@/lib/catalog";
+import { findAlbum, setLike } from "@/lib/catalog";
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const origin = request.headers.get("origin");
@@ -13,7 +13,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     } catch { return NextResponse.json({ error: "请求来源无效" }, { status: 403 }); }
   }
   const { id } = await params;
-  if (!getAlbum(id)) return NextResponse.json({ error: "图集不存在" }, { status: 404 });
+  if (!findAlbum(id)) return NextResponse.json({ error: "图集不存在" }, { status: 404 });
   let body: unknown;
   try { body = await request.json(); } catch { return NextResponse.json({ error: "请求格式无效" }, { status: 400 }); }
   if (!body || typeof body !== "object" || !("liked" in body) || typeof body.liked !== "boolean") {

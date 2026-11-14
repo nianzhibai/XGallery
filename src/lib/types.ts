@@ -16,8 +16,12 @@ export type Model = {
   name: string;
   albumCount: number;
   photoCount: number;
+  likeCount: number;
   coverId: string;
+  coverVersion: string;
 };
+
+export type ModelSuggestion = Pick<Model, "id" | "name" | "albumCount">;
 
 export type Photo = {
   id: string;
@@ -27,6 +31,10 @@ export type Photo = {
   position: number;
   version: string;
 };
+
+export type AlbumSort = "updated" | "title" | "popular";
+
+export type HomeSection = "recent" | "random";
 
 export type LibraryState = {
   favorites: string[];

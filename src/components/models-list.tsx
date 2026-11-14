@@ -23,7 +23,7 @@ const sortCardVariants = {
   entering: (delay: number) => ({ opacity: 1, transition: { duration: 0.12, delay, ease: "easeOut" as const } }),
 };
 
-export function ModelsList({ models }: { models: (Model & { likeCount: number })[] }) {
+export function ModelsList({ models }: { models: Model[] }) {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<SortMode>("name");
   const [hasSorted, setHasSorted] = useState(false);

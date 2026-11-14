@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useState } from "rea
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { TooltipProvider } from "./ui/tooltip";
 import type { LibraryState } from "@/lib/types";
+import { isCatalogId } from "@/lib/utils";
 
 const initialLibrary: LibraryState = { favorites: [], recent: [], liked: [] };
 const storageKey = "xgallery-library-v1";
@@ -20,7 +21,7 @@ const LibraryContext = createContext<{
 function parseLibrary(value: string | null): LibraryState {
   try {
     const data = JSON.parse(value || "{}");
-    const ids = (key: string) => Array.isArray(data[key]) ? [...new Set<string>(data[key].filter((item: unknown) => typeof item === "string" && /^[a-f0-9]{24}$/.test(item)))].slice(0, 1000) : [];
+    const ids = (key: string) => Array.isArray(data[key]) ? [...new Set<string>(data[key].filter((item: unknown) => typeof item === "string" && isCatalogId(item)))].slice(0, 1000) : [];
     return { favorites: ids("favorites"), recent: ids("recent").slice(0, 100), liked: ids("liked") };
   } catch { return initialLibrary; }
 }

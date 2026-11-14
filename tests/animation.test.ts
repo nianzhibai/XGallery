@@ -11,7 +11,7 @@ const root = path.join(temporary, "Albums");
 process.env.ALBUMS_DIR = root;
 process.env.DATABASE_PATH = path.join(temporary, "catalog.db");
 const { stableId, syncAlbums } = await import("../src/lib/sync");
-const { getAlbums, getPhotos } = await import("../src/lib/catalog");
+const { listAlbums, listPhotos } = await import("../src/lib/catalog");
 const { getDatabase } = await import("../src/lib/db");
 
 after(async () => { getDatabase().sqlite.close(); await rm(temporary, { recursive: true, force: true }); });
@@ -29,7 +29,7 @@ test("索引动图，并在重新同步时复用未更改图片的尺寸", async
   const apng = "iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAACGFjVEwAAAACAAAAAPONk3AAAAAaZmNUTAAAAAAAAAACAAAAAgAAAAAAAAAAAAEACgAA6FTcAAAAABVJREFUeJxj/M/A8J+BgYGBCUSAMAAfFwICAkezFAAAABpmY1RMAAAAAQAAAAIAAAACAAAAAAAAAAAAAQAKAABzJzbUAAAAGWZkQVQAAAACeJxjZGD4/5+BgYGBCUSAMAAdGQICRW6eVwAAAABJRU5ErkJggg==";
   await writeFile(path.join(albumPath, "05-animated.png"), Buffer.from(apng, "base64"));
 
-  const filenames = () => getPhotos(getAlbums()[0].id).map((photo) => photo.filename);
+  const filenames = () => listPhotos(listAlbums().albums[0].id).map((photo) => photo.filename);
   assert.equal((await syncAlbums()).photos, 5);
   assert.deepEqual(filenames(), ["01-static.gif", "02-static.png", "03-animated.gif", "04-animated.webp", "05-animated.png"]);
   const animatedId = stableId(path.relative(root, path.join(albumPath, "03-animated.gif")));
@@ -37,12 +37,12 @@ test("索引动图，并在重新同步时复用未更改图片的尺寸", async
 
   assert.equal((await syncAlbums()).photos, 5);
   assert.deepEqual(filenames(), ["01-static.gif", "02-static.png", "03-animated.gif", "04-animated.webp", "05-animated.png"]);
-  assert.equal(getPhotos(getAlbums()[0].id).find((photo) => photo.id === animatedId)?.width, 13, "复用未更改图片的尺寸");
+  assert.equal(listPhotos(listAlbums().albums[0].id).find((photo) => photo.id === animatedId)?.width, 13, "复用未更改图片的尺寸");
 
   const changedTime = new Date(Date.now() + 10_000);
   await utimes(path.join(albumPath, "03-animated.gif"), changedTime, changedTime);
   await syncAlbums();
-  assert.equal(getPhotos(getAlbums()[0].id).find((photo) => photo.id === animatedId)?.width, 1, "文件变化后重新读取元数据");
+  assert.equal(listPhotos(listAlbums().albums[0].id).find((photo) => photo.id === animatedId)?.width, 1, "文件变化后重新读取元数据");
   await rm(path.join(albumPath, "05-animated.png"));
   await syncAlbums();
   assert.deepEqual(filenames(), ["01-static.gif", "02-static.png", "03-animated.gif", "04-animated.webp"]);

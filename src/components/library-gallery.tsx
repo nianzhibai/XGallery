@@ -1,22 +1,22 @@
 "use client";
 
 import { NavigationLink as Link } from "./navigation-link";
-import type { Album } from "@/lib/types";
+import { useAlbumLookup } from "./album-cache";
 import { AlbumGrid } from "./album-card";
 import { EmptyState, PageHeading } from "./page-parts";
 import { useLibrary } from "./providers";
 import { Button } from "./ui/button";
 
-export function LibraryGallery({ albums, tab }: { albums: Album[]; tab: string }) {
+export function LibraryGallery({ tab }: { tab: string }) {
   const { library, ready, toggleFavorite, removeRecent, clearRecent, toast } = useLibrary();
   const isRecent = tab === "recent";
   const ids = isRecent ? library.recent : library.favorites;
-  const visible = ids.map((id) => albums.find((album) => album.id === id)).filter((album): album is Album => !!album);
+  const { albums: visible, loaded, failed } = useAlbumLookup(ids, ready);
   return <>
     <PageHeading title="我的收藏" description="只保存在这台设备的浏览器里">
       <nav className="library-tabs" aria-label="我的图库"><Link href="/library" className={!isRecent ? "is-active" : ""}>收藏 <span>{library.favorites.length}</span></Link><Link href="/library?tab=recent" className={isRecent ? "is-active" : ""}>最近看过 <span>{library.recent.length}</span></Link></nav>
     </PageHeading>
-    {!ready ? <div className="library-loading" aria-label="正在读取收藏" /> : visible.length ? <>
+    {failed && !loaded ? <EmptyState title="暂时无法读取收藏" description="请稍后刷新页面重试" /> : !loaded ? <div className="library-loading" aria-label="正在读取收藏" /> : visible.length ? <>
       <AlbumGrid albums={visible} overlay removeLabel={isRecent ? "移除浏览记录" : "取消收藏"} onRemove={(id) => {
         if (isRecent) { removeRecent(id); toast("已移除浏览记录"); }
         else { toggleFavorite(id); toast("已取消收藏"); }

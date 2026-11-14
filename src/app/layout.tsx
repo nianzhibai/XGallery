@@ -3,6 +3,7 @@ import { Providers } from "@/components/providers";
 import { BackToTop } from "@/components/page-parts";
 import { NavigationProgressProvider } from "@/components/navigation-progress";
 import { HomeBatchesProvider } from "@/components/home-batches";
+import { AlbumCacheProvider } from "@/components/album-cache";
 import { themeColors } from "@/lib/theme";
 import "photoswipe/style.css";
 import "./globals.css";
@@ -17,5 +18,5 @@ export const viewport: Viewport = { width: "device-width", initialScale: 1, colo
 const themeScript = `(function(){var t;try{t=localStorage.getItem('xgallery-theme')}catch(e){}if(t!=='light'&&t!=='dark')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.dataset.theme=t;var m=document.createElement('meta');m.name='theme-color';m.content=${JSON.stringify(themeColors)}[t];document.head.appendChild(m)})()`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return <html lang="zh-CN" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head><body><NavigationProgressProvider><Providers><HomeBatchesProvider>{children}<BackToTop /></HomeBatchesProvider></Providers></NavigationProgressProvider></body></html>;
+  return <html lang="zh-CN" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head><body><NavigationProgressProvider><Providers><AlbumCacheProvider><HomeBatchesProvider>{children}<BackToTop /></HomeBatchesProvider></AlbumCacheProvider></Providers></NavigationProgressProvider></body></html>;
 }

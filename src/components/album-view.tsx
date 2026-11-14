@@ -11,6 +11,7 @@ import type { Album, Photo } from "@/lib/types";
 import { AlbumGrid } from "./album-card";
 import { PhotoWall } from "./photo-wall";
 import { useLibrary } from "./providers";
+import { useRememberAlbum } from "./album-cache";
 import { ThemeToggle } from "./theme-toggle";
 import { Button } from "./ui/button";
 import { useScrollHeader } from "@/lib/use-scroll-header";
@@ -29,6 +30,7 @@ export function AlbumView({ album, photos, related, modelAlbumCount }: { album: 
   const saved = library.favorites.includes(album.id);
   const liked = library.liked.includes(album.id);
   useEffect(() => { if (ready) visit(album.id); }, [album.id, ready, visit]);
+  useRememberAlbum(album);
   const like = useCallback(async () => {
     if (likeLock.current || !ready) return;
     likeLock.current = true; setPending(true);

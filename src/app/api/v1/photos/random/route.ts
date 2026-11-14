@@ -1,9 +1,11 @@
-import { randomPhoto } from "@/lib/api/catalog";
+import { randomPhoto } from "@/lib/catalog";
+import { photoResource } from "@/lib/api/resources";
 import { authorize, json, notFound } from "@/lib/api/http";
 
 export function GET(request: Request) {
   const denied = authorize(request);
   if (denied) return denied;
   const photo = randomPhoto();
-  return photo ? json({ data: photo }) : notFound("图库中没有照片");
+  if (!photo) return notFound("图库中没有照片");
+  return json({ data: { ...photoResource(photo), albumId: photo.albumId, modelId: photo.modelId, modelName: photo.modelName } });
 }

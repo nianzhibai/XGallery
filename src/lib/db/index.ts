@@ -12,6 +12,7 @@ function connect() {
   sqlite.pragma("journal_mode = WAL");
   sqlite.pragma("foreign_keys = ON");
   sqlite.pragma("busy_timeout = 5000");
+  sqlite.function("unicode_lower", { deterministic: true }, (value) => typeof value === "string" ? value.toLowerCase() : value);
   sqlite.exec(readFileSync(path.join(process.cwd(), "drizzle/0000_init.sql"), "utf8"));
   return { sqlite, db: drizzle(sqlite, { schema }) };
 }
