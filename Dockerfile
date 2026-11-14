@@ -18,7 +18,7 @@ COPY --from=build --chown=node:node /app/tsconfig.json ./tsconfig.json
 COPY --from=build --chown=node:node /app/drizzle ./drizzle
 COPY --from=build --chown=node:node /app/scripts ./scripts
 COPY --from=build --chown=node:node /app/src ./src
-RUN mkdir -p /app/data && chown node:node /app/data
+RUN mkdir -p /app/data /app/.next/cache/images && chown -R node:node /app/data /app/.next/cache
 
 USER node
 EXPOSE 3000

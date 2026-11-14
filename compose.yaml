@@ -17,6 +17,8 @@ services:
     volumes:
       - ./albums:/albums:ro
       - xgallery-data:/app/data
+      - xgallery-image-cache:/app/.next/cache/images
 
 volumes:
   xgallery-data:
+  xgallery-image-cache:
