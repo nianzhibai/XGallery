@@ -6,7 +6,7 @@ XGallery 是一个精致优雅的多模特图集展示项目，提供丝滑、�
 
 项目基于 Next.js 和 TypeScript，使用 Tailwind CSS、shadcn/ui 和 Motion 构建界面与动画，采用 SQLite 和 Drizzle 管理数据，并通过 PhotoSwipe 提供大图浏览体验
 
-页面仿照 [栖光集](https://xrw-album.christin3.com/)
+仿照 [栖光集](https://xrw-album.christin3.com/) 设计，[栖光集仓库](https://github.com/CY-Christin/xrw-alubm)
 
 ## 图集目录要求
 
